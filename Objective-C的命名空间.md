@@ -203,6 +203,62 @@ static char * XXObject;  // Redefinition of "XXObject" as different kind of symb
 2. 就像宪法奖学金一样，对于苹果官方的编程指南有严肃又松散的解释。这里没有固定的文档，他们可能总会一直变化。看到这里，如果你还是悬而未决，那么你只需要把的类别方法名加上前缀，如果你还是选择不去做任何改变，那么你就等着自食其果吧。
 
 ##Swizzing
-##正在翻译
+###混合
 
+1. The one case where method prefixing (or suffixing) is absolutely necessary is when doing method replacement, as discussed in last week's article on swizzling.
+2. 在方法混合时，方法名加前缀或者后缀也是非常有必要的，这个我在上周关于swizzling的文章中提到过。
 
+```
+@implementation UIViewController (Swizzling)
+
+	- (void)xxx_viewDidLoad {
+		-     [self xxx_viewDidLoad];
+		-
+			-         // Swizzled implementation
+			-         }
+			-
+```
+##Do We Really Need Namespaces?
+##我们真的需要命名空间么？
+
+1. With all of the recent talk about replacing / reinventing / reimagining Objective-C, it's almost taken as a given that namespacing would be an obvious feature. But what does that actually get us?
+2. 在最近关于Objective-C替换、改造、重塑的讨论中，我可以明显地发现命名空间是未来的一个趋势。但是它到底给我们带来了什么呢？
+
+---
+
+1. Aesthetics? Aside from IETF members and military personnel, nobody likes the visual aesthetic of CLAs. But would ::, /, or an extra . really make matters better? Do we really want to start calling NSArray "Foundation Array"? (And what would I do with NSHipster.com ?!)
+2. 美学？除了IETE成员和军事人员，我想没有人会喜欢CLAs的视觉审美，但是用::，/或者另外的.这些符号真的能让我们觉得更好么？你真的想要以后把`NSArray`叫做`Foundation Array`？（那我这个NSHipster.com这个博客不是也得改名字了?!）
+
+---
+
+1. Semantics? Start to look closely at any other language, and how they actually use namespaces, and you'll realize that namespaces don't magically solve all matters of ambiguity. If anything, the additional context makes things worse.
+2. 语义学？我比较一下其他的语言，看看他们是怎么用命名空间的，那么你就会意识到命名控件不能解决所有不明确的问题。可能在某些额外环境的情况下，那些命名空间会出现更多问题。
+
+---
+
+1. Not to create a straw man, but an imagined implementation of Objective-C namespaces probably look a lot like this:
+2. 先不要这么做好决定，你只要想一下Objective-C的命名空间的实现可能会像这个样子:
+
+```
+@namespace XX
+    @implementation Object
+
+		    @using F: Foundation;
+
+				    - (void)foo {
+							-         F:Array *array = @[@1,@2, @3];
+							-
+								-                 // ...
+								-                     }
+								-
+								-                         @end
+								-                         @end
+
+```
+
+1. What we have currently—warts and all—has the notable advantage of non-ambiguity. There is no mistaking NSString for anything other than what it is, either by the compiler or when we talk about it as developers. There are no special contextual considerations to consider when reading through code to understand what actors are at play. And best of all: class names are exceedingly easy to search for.
+2. 我们有繁琐的代码但也有容易理解的明显优势。我们作为开发者去讨论NSString的时候，我们不会把它理解成别的意思，编译器也是一样。当我们在阅读代码时，我们不需要过多地去考虑这些代码是什么作用的。并且最重要的是，类名非常容易就可以找到。
+
+---
+
+不管怎样，如果你对这个讨论感兴趣的话，我强烈建议你看一下Kyle Sluder的《 this namespace feature proposal 》。非常值得一看。
