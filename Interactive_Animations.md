@@ -68,14 +68,24 @@ What we want to have, though, is a nice, smooth deceleration and acceleration.
 
 This only becomes feasible once you start controlling animations indirectly, i.e. through simulated forces acting on the view. The new animation needs to take the layer’s current velocity vector as input in order to produce a smooth result.
 
+只有通过间接操作动画才能达到上面的效果，比如通过模拟力在界面上的表现。新的动画需要用layer的当前速率矢量作为参数传入来达到顺畅的效果。
+
 Looking at the UIView animation API for spring animations (animateWithDuration:delay:usingSpringWithDamping:initialSpringVelocity:options:animations:completion:), you’ll notice that the velocity is a CGFloat. So while you can give the animation an initial velocity in the direction the animation moves the view, you cannot tell the animation that the view is, for example, currently moving at a certain velocity perpendicular to the new animation direction. In order to enable this, the velocity needs to be expressed as a vector.
+
+看一下UIView 中关于spring animations 的动画API （animateWithDuration:delay:usingSpringWithDamping:initialSpringVelocity:options:animations:completion:），有会注意到这个速率是个CGFloat。所以当我们给一个动画运动的方向上加一个初始的速率，这个动画根本不知道这个界面在哪里，就好像我们现在沿着新动画方向的垂直方向移动。为了使这个成为可能，这个速率需要用矩形来表示。
 
 ##Solutions
 ##解决方案
 
 So let’s take a look at how we can correctly implement interactive and interruptible animations. To do this, we’re going to build something like the Control Center panel:
 
+所以让我们看一下我们怎样来实现一个可交互并且可中断的动画。为了实现这个效果，我们将要做一个类似于控制中心板的东西:
+
+<iframe src="http://www.objc.io/images/issue-12/interactive-animation.mov" allowtransparency="true" scrolling="no" border="0" frameborder="0" style="width:480px;height:400px;"></iframe>
+
 The panel has two states: opened and closed. You can toggle the states by tapping it, or dragging it up and down. The challenge is to make everything interactive, even while animating. For example, if you tap the panel while it’s animating to the opened state, it should animate back to the closed state from its current position. In a lot of apps that use default animation APIs, you’ll have to wait until the animation is finished before you can do anything. Or, if you don’t have to wait, the animation exhibits a discontinuous velocity curve. We want to work around this.
+
+这个控制板有两个状态：打开和关闭。你可以通过点击来切换这两个状态，或者通过上下拖动来调整音量。我要将每个东西都做的可以交互，甚至是在动画的过程中，这是有挑战性的。比如，当你在这个控制不切换到打开的动画时，你点击了它，那么这个控制板也应该从现在这个点回到关闭状态。在现在很多的apps中，大部分都是用默认的动画api，你必须要等一个动画结束之后你才能做自己想做的事情。或者，你不需要等，但是你会看到一个不连续的速率曲线。我们想要解决这个问题。
 
 ###UIKit Dynamics
 ###UIKit Dynamics
