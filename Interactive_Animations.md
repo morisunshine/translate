@@ -92,7 +92,11 @@ The panel has two states: opened and closed. You can toggle the states by tappin
 
 With iOS 7, Apple introduced the animation framework UIKit Dynamics (see WWDC 2013 sessions 206 and 221). UIKit Dynamics is based on a pseudo-physics engine that can animate everything that implements the UIDynamicItem protocol by adding specific behaviors to an animator object. This framework is very powerful and enables complex behaviors of many items like attachments and collisions. Take a look at the sample dynamics catalog to see what’s available.
 
+随着iOS7的发布，苹果向我们介绍了一个动画框架UIKit Dynamics(可以参见WWDC 2013 sessions 206 and 221)。UIKit Dynamic是一个基于模拟物理引擎的框架，它能够实现很多动画只要添加指定的行为到你动画对象上来实现UIDynamicItem 协议。这个框架非常强大并且能够将很多物体像附着行为和碰撞行为一样结合起来，让我们看一下简单的dynamic 目录，看看有什么我们可以得到启发的。
+
 Since animations with UIKit Dynamics are driven indirectly, as we discussed above, this enables us to implement truly interactive animations that can be interrupted and that exhibit continuous acceleration behavior at any time. At the same time, the abstraction of UIKit Dynamics at the physics level can also seem overwhelming for the kind of animations that we generally need in user interfaces. In most cases, we’ll only use a very small subset of its capabilities.
+
+因为UIKit Dynamic的动画是被间接驱动的，就想上面提到的，这就为我们实现真实的交互动画成为可能，它能在任何时候被中断并且可以展示连续加速的动画。同时，UIKit Dynamic在物理层的抽象是能完全胜任我们一般情况下在用户界面上的所需要的动画。在大部分情况下，我们只会用到其中的一部分功能。
 
 ####Defining Behaviors
 ####定义行为
