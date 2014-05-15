@@ -213,9 +213,15 @@ We not only allow the panel to be dragged, but it can also be tapped to toggle f
 
 And that’s pretty much all there is to it. You can check out the whole example project on GitHub.
 
+这样该完成的功能都已经实现了。你可以在github上查看完整的例子。
+
 To reiterate the crucial point: UIKit Dynamics allows us to drive the animation indirectly by simulating forces on the view (in our case, spring and friction forces). This indirection enables us to interact with the view at any time while maintaining a continuous velocity curve.
 
+重申一点：UIKit Dynamics 可以通过在界面上模拟力来间接地驱动动画（我们的例子中，使用的是弹力和摩擦力）。这就使我们与界面互动成为可能，并且保持了动画的连续速度曲线。
+
 Now that we have implemented this interaction with UIKit Dynamics, we’ll take a look behind the scenes. Animations like the one in our example only use a tiny fraction of UIKit Dynamic’s capabilities, and it’s surprisingly simple to implement them yourself. That’s a good exercise to understand what’s going on, but it can also be necessary if you either don’t have UIKit Dynamics available (e.g. on the Mac) or it’s not a good abstraction for your use case.
+
+现在我们已经通过UIKit Dynamic来实现了交互，让我们看一下这个场景的背后。这个例子的动画中我们只是用了UIkit Dynamic中的一小部分功能，并且它的实现方式非常地简单。对于我们来说这是一个非常好的例子去理解发生了什么，但是如果我们使用的环境中没有UIKit Dynamic（比如说在Mac上）或者你的情况中不能很好的适用UIkit Dynamic。
 
 ##Driving Animations Yourself
 ##自己操作动画
