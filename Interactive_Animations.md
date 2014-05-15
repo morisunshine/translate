@@ -228,6 +228,8 @@ Now that we have implemented this interaction with UIKit Dynamics, we’ll take 
 
 As for the animations you’ll use most of the time in your apps, e.g. simple spring animations, it’s surprisingly not difficult to drive those yourself. It’s a good exercise to lift the lid of the huge black box of UIKit Dynamics and to see what it takes to implement simple interactive animations ‘manually.’ The idea is rather easy: we make sure to change the view’s frame 60 times per second. For each frame, we adjust the view’s frame based on the current velocity and the forces acting on the view.
 
+关于在你的应用中大部分时间会用的动画，比如简单的弹力动画，我们控制它真的不难。举起一个使用UIKit Dynamic的巨大黑色箱子，然后看它是如何实现简单的手动交互的来做一个练习。这个想法非常简单：我们保证修改这个界面的frame60次每秒。每次frame的变化时，我们都要基于当前的速率和当前作用在界面上的力来调整这个界面的frame。
+
 ###The Physics
 ###物理原理
 
