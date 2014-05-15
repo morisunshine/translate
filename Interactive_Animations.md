@@ -235,37 +235,61 @@ As for the animations you’ll use most of the time in your apps, e.g. simple sp
 
 Let’s first take a look at some basic physics necessary to drive a spring animation like we created before using UIKit Dynamics. To simplify things, we’ll look at a purely one-dimensional case (as it is the case in our example), although introducing the second dimension is straightforward.
 
+首先让我们看一些需要的基础物理知识，这样我们才能实现想刚才使用UIKit Dynamic创建的弹力动画效果。特别指出的是，我们将要先看纯一维世界（在我们的例子中就是这样的情况）因为直接介绍第二维太直白了。
+
 The objective is to calculate the new position of the panel based on its current position and the time that has elapsed since the last animation tick. This can be expressed as:
+
+这个对象是用来计算滑动板的新位置，而新位置是基于滑动板的当前位置和从上一次动画开始到现在的时间来决定的。我们可以把它表达成这样：
 
     y = y0 + Δy
 
 The position delta is a function of the velocity and the time:
 
+这个位置的偏移量可以通过速率和时间的函数来表达：
+
     Δy = v ⋅ Δt
 The velocity can be calculated as the previous velocity plus the velocity delta, caused by the force acting on the view:
+
+这个速率可以通过前一次的速率加上速率偏移量算出来，这个速率是由力在界面上的作用引起的。
 
     v = v0 + Δv
 The change in velocity can be calculated by the impulse applied to the view:
 
+速率的变化可以通过作用在这个界面上的推力计算出来：
+
     Δv = (F ⋅ Δt) / m
 Now, let’s take a look at the force acting on the view. In order to get the spring effect, we have to combine a spring force with friction force:
+
+现在，让我们看一下作用在这个界面上的力。为了得到弹力效果，我们必须要将摩擦力和弹力结合：
 
     F = F_spring + F_friction
 The spring force comes straight from the textbook:
 
+弹力的计算方法我们可以从任何一本教科书中得到：
+
     F_spring = k ⋅ x
 where k is the spring constant and x is the distance of the view to its target end point (the length of the spring). Therefore, we can also write this as:
+
+k是弹力系数，x是到目标结束位置的距离（也就是弹力的长度）。因此，我们可以把它写成这样：
 
     F_spring = k ⋅ abs(y_target - y0)
 We calculate friction as being proportional to the view’s velocity:
 
+摩擦力是界面速率的正比：
+
     F_friction = μ ⋅ v
 μ is a simple friction constant. You could come up with other ways to calculate the friction force, but this works well to create the animation we want to have.
 
+μ是一个简单的摩擦系数。你可以通过别的方式来计算摩擦力，但是这个方法能很好地做出我们想要的动画效果。
+
 Putting this together, the force on the view is calculated as:
+
+将上面的方法放在一起，我们就可以算出作用在界面上的力：
 
     F = k ⋅ abs(y_target - y0) + μ ⋅ v
 To simplify things a bit more, we’ll set the view’s mass to 1, so that we can calculate the change in position as:
+
+为了实现起来简单点，我们将view的质量设置为1，这样我们就能计算在位置上的变化：
 
     Δy = (v0 + (k ⋅ abs(y_target - y0) + μ ⋅ v) ⋅ Δt) ⋅ Δt
 
@@ -273,6 +297,8 @@ To simplify things a bit more, we’ll set the view’s mass to 1, so that we ca
 ###实现动画
 
 To implement this, we first create our own Animator class, which drives the animations. This class uses a CADisplayLink, which is a timer made specifically for drawing synchronously with the display’s refresh rate. In other words, if your animation is smooth, the timer calls your methods 60 times per second. Next, we implement a protocol Animation that works together with our Animator. This protocol has only one method, animationTick:finished:. This method gets called every time the screen is updated, and gets two parameters: the first parameter is the duration of the previous frame, while the second parameter is a pointer to a BOOL. By setting the value of the pointer to YES, we can communicate back to the Animator that we’re done animating:
+
+为了实现动画，我们首先需要创建我们自己的`Animator`类，它将扮演驱动动画的功能。这个类使用了`CADisplayLink`，`CADisplayLink`是指定在渲染时和界面的刷新频率同步的定时器。换句话说，如果你的动画是流畅的，这个定时器就会每秒60次地调用你的方法。接下来，我们需要实现`Animation`协议来和我们的`Animator`一起工作。这个协议只有一个方法，`animationTick:finished:`。屏幕每次被刷洗时都会调用这个方法，并且我们会得到两个参数：第一个参数是前一个frame的持续时间，第二个参数是一个bool值，我们通过设置这个bool值为YES时，我们就可以又回到我们刚才已经结束动画的`Animator`:
 
     @protocol Animation <NSObject>
     - (void)animationTick:(CFTimeInterval)dt finished:(BOOL *)finished;
