@@ -103,7 +103,11 @@ Since animations with UIKit Dynamics are driven indirectly, as we discussed abov
 
 In order to implement our sliding-panel behavior, we’ll make use of two different behaviors that come with UIKit Dynamics: UIAttachmentBehavior and UIDynamicItemBehavior. The attachment behavior fulfills the role of a spring, pulling our view toward its target point. The dynamic item behavior, on the other hand, defines intrinsic properties of the view, such as its friction coefficient.
 
+为了实现我们的滑动板行为，我们将使用UIkit Dynamic的两个不同的行为:UIAttachmentBehavior 和 UIDynamicItemBehavior。这个连接行为用来实现弹簧行为，滑动我们的界面朝向它的目标点。在另一方面，这个动态item behvaior定义了这个view的本质属性，比如它的摩擦系数。
+
 To package these two behaviors for our sliding panel, we’ll create our own behavior subclass:
+
+我创建了一个行为子类，将这两个行为封装到我们的滑动板上:
 
     @interface PaneBehavior : UIDynamicBehavior
 
@@ -115,6 +119,8 @@ To package these two behaviors for our sliding panel, we’ll create our own beh
     @end
 
 We initialize this behavior with one dynamic item and then can set its target point and velocity to whatever we want. Internally, we create the attachment behavior and the dynamic item behavior and add both as child behavior to our custom behavior:
+
+我们通过一个dynamic item 来初始化这个行为，然后就可以设置他的目标点和我们想要的任何速率。再深入的话，我们创建了连接行为和dynamic item 行为，并且将这些行为添加到我们自定义的行为中:
 
     - (void)setup
     {
@@ -134,6 +140,8 @@ We initialize this behavior with one dynamic item and then can set its target po
 
 In order to make the targetPoint and velocity properties affect the item’s behavior, we overwrite their setters and modify the corresponding properties on the attachment and item behaviors, respectively. For the target point, this is very simple:
 
+为了实现用`targetPoint` 和 `velocity`来影响这些item’的行为，我们需要重写他们的setters方法，并且在连接行为上修改到对应的property和还有item behaviors。我们对目标点的修改非常简单:
+
     - (void)setTargetPoint:(CGPoint)targetPoint
     {
         _targetPoint = targetPoint;
@@ -142,20 +150,26 @@ In order to make the targetPoint and velocity properties affect the item’s beh
 
 For the velocity property, we have to jump through one more hoop, since the dynamic item behavior only allows relative changes in velocity. That means that in order to set the velocity to an absolute value, we first have to get its current velocity and then add the difference to the target velocity:
 
-- (void)setVelocity:(CGPoint)velocity
-{
-    _velocity = velocity;
-    CGPoint currentVelocity = [self.itemBehavior linearVelocityForItem:self.item];
-    CGPoint velocityDelta = CGPointMake(velocity.x - currentVelocity.x, velocity.y - currentVelocity.y);
-    [self.itemBehavior addLinearVelocity:velocityDelta forItem:self.item];
-}
+对于`velocity`这个property，我们需要多做一些工作，因为dynamic item behavior 只允许相对速度的改变。这就意味这为了设置这个`velocity`为绝对值，我们首先需要得到当前的速度，然后在添加差值来得到我们的目标速度。
+
+    - (void)setVelocity:(CGPoint)velocity
+    {
+        _velocity = velocity;
+        CGPoint currentVelocity = [self.itemBehavior linearVelocityForItem:self.item];
+        CGPoint velocityDelta = CGPointMake(velocity.x - currentVelocity.x, velocity.y - currentVelocity.y);
+        [self.itemBehavior addLinearVelocity:velocityDelta forItem:self.item];
+    }
 
 ###Putting the Behavior to Use
 ###使用行为
 
 Our sliding panel has three different states: it is at rest in one of its end positions, being dragged by the user, or animating without the user’s interaction toward one of its end points.
 
+我们的滑动板有三个不同状态：在它的结束位置上它是静止的状态，被用户拖动的状态和在没有用户交互时运动到结束位置的动画状态。
+
 At the transition from the direct manipulation state (the user dragging the panel) to the animation state, we have to do some extra work to make sure that the panel exhibits a smooth animation behavior. When the user stops dragging the panel, it sends a message to its delegate. Within this method, we decide toward what position the panel should animate and add our custom PaneBehavior with this endpoint and – very important – the initial velocity, in order to ensure a smooth transition from dragging to animation:
+
+从直接操作状态（用户拖动这个滑动板）过渡到动画状态，我们还有很多其他的事要做才能将这个板的交互能顺畅地展示动画行为。但用于停止拖动这个板时，它会发送一个消息到它的delegate。根据这个方法，我们可以知道这个板应该朝哪个方向运动，然后在结束位置添加我们自定义的`PaneBehavior`，然后非常重要的是，为了确保从拖动到动画这个过程能够非常流畅，我们需要给它一个初始速度。
 
     - (void)draggableView:(DraggableView *)view draggingEndedWithVelocity:(CGPoint)velocity
     {
@@ -179,12 +193,17 @@ At the transition from the direct manipulation state (the user dragging the pane
 
 As soon as the user puts his or her finger down on the panel again, we have to remove the dynamic behavior from the animator, in order to not interfere with the pan gesture:
 
+一旦用户用他的手指再次放到这滑动板上时，我必须要将所有的dynamic behavior从animator删除，这样这滑动板才能响应拖动手势:
+
+
     - (void)draggableViewBeganDragging:(DraggableView *)view
     {
         [self.animator removeAllBehaviors];
     }
 
 We not only allow the panel to be dragged, but it can also be tapped to toggle from one position to the other. When a tap happens, we immediately adjust the panel’s target position. Since we don’t control the animation directly, but via spring and friction forces, the animation will proceed smoothly without abruptly reversing its movement:
+
+我不仅仅允许这个滑动板被拖动，我们还允许它可以被点击，让它从一个位置跳转到另一个位置来达到开关的效果。一旦点击事件发生，我们就会立即调整这个滑动板的目标位置。因为我们不能直接控制动画，但是通过弹力和摩擦力，我们的动画会非常流畅地不突然的执行这个移动：
 
     - (void)didTap:(UITapGestureRecognizer *)tapRecognizer
     {
