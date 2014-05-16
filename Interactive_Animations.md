@@ -1,9 +1,4 @@
-Issue #12 Animations, May 2014
-By Chris Eidhof and Florian Kugler
-
-When Steve Jobs introduced the first iPhone in 2007, the touch screen interaction had a certain kind of magic to it. A prime example of this was his first demonstration of scrolling a table view. You can hear in the reaction of the audience how impressive what seems the most normal thing to us today was back then. A little bit later in the presentation, he underlined this point by quoting somebody he had given a demo to before: “You got me at scrolling”.
-
-当斯蒂芬乔布斯在2007第一次介绍iPhone的时候，iPhone的触摸屏交互简直就像是一种魔力。最好的例子就是他第一次展示滑动TableView的时候。你可以感受到当时观众的反应是多么印象深刻，但是对于我们来说早已习以为常。在展示的后面一部分，
+当斯蒂芬乔布斯在2007第一次介绍iPhone的时候，iPhone的触摸屏交互简直就像是一种魔力。最好的例子就是他[第一次展示滑动TableView的时候](https://www.youtube.com/watch?v=t4OEsI0Sc_s&t=16m9s)。你可以感受到当时观众的反应是多么印象深刻，但是对于我们来说早已习以为常。在展示的后面一部分，he underlined this point by quoting somebody he had given a demo to before: [“You got me at scrolling”](https://www.youtube.com/watch?v=t4OEsI0Sc_s&t=16m9s).
 
 What was it about scrolling that created this ‘wow’ effect?
 
@@ -54,7 +49,7 @@ The bigger problem with CAAnimation animations is that they directly operate on 
 更大的问题是CAAnimation 是直接在空间特性层上操作的。这意味着什么呢？比如我们想指定一个layer从坐标为（100，100）的位置运动到（300，300）的位置，但是我突然在它运动到中间的时候，我们想它停下来并且让它回到它原来的位置，那么这个如果用CAAnimation来实现的话就是非常复杂了。如果你只是简单地删除当前的动画然后再添加一个新的，那么这个layer的速率就会不连续。
 
 
-![图片](http://www.objc.io/images/issue-12/abrupt.png)
+![image](http://www.objc.io/images/issue-12/abrupt.png)
 
 What we want to have, though, is a nice, smooth deceleration and acceleration.
 
@@ -86,9 +81,9 @@ The panel has two states: opened and closed. You can toggle the states by tappin
 ###UIKit Dynamics
 ###UIKit Dynamics
 
-With iOS 7, Apple introduced the animation framework UIKit Dynamics (see WWDC 2013 sessions 206 and 221). UIKit Dynamics is based on a pseudo-physics engine that can animate everything that implements the UIDynamicItem protocol by adding specific behaviors to an animator object. This framework is very powerful and enables complex behaviors of many items like attachments and collisions. Take a look at the sample dynamics catalog to see what’s available.
+With iOS 7, Apple introduced the animation framework UIKit Dynamics (see WWDC 2013 sessions [206](https://developer.apple.com/videos/wwdc/2013/index.php?id=206) and [221](https://developer.apple.com/videos/wwdc/2013/index.php?id=221)). UIKit Dynamics is based on a pseudo-physics engine that can animate everything that implements the [UIDynamicItem](https://developer.apple.com/library/ios/documentation/uikit/reference/UIDynamicItem_Protocol/Reference/Reference.html) protocol by adding specific behaviors to an animator object. This framework is very powerful and enables complex behaviors of many items like attachments and collisions. Take a look at the sample dynamics catalog to see what’s available.
 
-随着iOS7的发布，苹果向我们介绍了一个动画框架UIKit Dynamics(可以参见WWDC 2013 sessions 206 and 221)。UIKit Dynamic是一个基于模拟物理引擎的框架，它能够实现很多动画只要添加指定的行为到你动画对象上来实现UIDynamicItem 协议。这个框架非常强大并且能够将很多物体像附着行为和碰撞行为一样结合起来，让我们看一下简单的dynamic 目录，看看有什么我们可以得到启发的。
+随着iOS7的发布，苹果向我们介绍了一个动画框架UIKit Dynamics(可以参见WWDC 2013 sessions [206](https://developer.apple.com/videos/wwdc/2013/index.php?id=206) and [221](https://developer.apple.com/videos/wwdc/2013/index.php?id=221))。UIKit Dynamic是一个基于模拟物理引擎的框架，它能够实现很多动画只要添加指定的行为到你动画对象上来实现[UIDynamicItem](https://developer.apple.com/library/ios/documentation/uikit/reference/UIDynamicItem_Protocol/Reference/Reference.html)协议。这个框架非常强大并且能够将很多物体像附着行为和碰撞行为一样结合起来，让我们看一下简单的[dynamic 目录](https://developer.apple.com/library/ios/samplecode/DynamicsCatalog/Introduction/Intro.html)，看看有什么我们可以得到启发的。
 
 Since animations with UIKit Dynamics are driven indirectly, as we discussed above, this enables us to implement truly interactive animations that can be interrupted and that exhibit continuous acceleration behavior at any time. At the same time, the abstraction of UIKit Dynamics at the physics level can also seem overwhelming for the kind of animations that we generally need in user interfaces. In most cases, we’ll only use a very small subset of its capabilities.
 
@@ -99,7 +94,7 @@ Since animations with UIKit Dynamics are driven indirectly, as we discussed abov
 
 In order to implement our sliding-panel behavior, we’ll make use of two different behaviors that come with UIKit Dynamics: UIAttachmentBehavior and UIDynamicItemBehavior. The attachment behavior fulfills the role of a spring, pulling our view toward its target point. The dynamic item behavior, on the other hand, defines intrinsic properties of the view, such as its friction coefficient.
 
-为了实现我们的滑动板行为，我们将使用UIkit Dynamic的两个不同的行为:UIAttachmentBehavior 和 UIDynamicItemBehavior。这个连接行为用来实现弹簧行为，滑动我们的界面朝向它的目标点。在另一方面，这个动态item behvaior定义了这个view的本质属性，比如它的摩擦系数。
+为了实现我们的滑动板行为，我们将使用UIkit Dynamic的两个不同的行为:[UIAttachmentBehavior](https://developer.apple.com/library/ios/documentation/uikit/reference/UIAttachmentBehavior_Class/Reference/Reference.html) 和 [UIDynamicItemBehavior](https://developer.apple.com/library/ios/documentation/uikit/reference/UIDynamicItemBehavior_Class/Reference/Reference.html)。这个连接行为用来实现弹簧行为，滑动我们的界面朝向它的目标点。在另一方面，这个动态item behvaior定义了这个view的本质属性，比如它的摩擦系数。
 
 To package these two behaviors for our sliding panel, we’ll create our own behavior subclass:
 
@@ -209,7 +204,7 @@ We not only allow the panel to be dragged, but it can also be tapped to toggle f
 
 And that’s pretty much all there is to it. You can check out the whole example project on GitHub.
 
-这样该完成的功能都已经实现了。你可以在github上查看完整的例子。
+这样该完成的功能都已经实现了。你可以在[GitHub](https://github.com/objcio/issue-12-interactive-animations-uidynamics)上查看完整的例子。
 
 To reiterate the crucial point: UIKit Dynamics allows us to drive the animation indirectly by simulating forces on the view (in our case, spring and friction forces). This indirection enables us to interact with the view at any time while maintaining a continuous velocity curve.
 
@@ -434,15 +429,14 @@ The entire project is available on GitHub.
 
 It’s important to keep in mind that driving animations via display links (as demonstrated above or by using UIKit Dynamics or something like Facebook’s POP framework) comes with a tradeoff. As Andy Matuschak pointed out UIView and CAAnimation animations are less likely to be affected by other tasks running on the system, because the render server runs at a higher priority than your app.
 
-记住我们是通过DisplayLink来驱动动画这一点非常重要（就像我们刚才演示的，或者我们使用UIkit Dynamic来做的例子，或者像Facebook的Pop框架）都是经过平衡的过程。就像Andy Matuschar
-指出UIView和CAAnimation动画和其他任务相比，更少受系统的影响，因为渲染在你的应用处于更高的优先级。
+记住我们是通过DisplayLink来驱动动画这一点非常重要（就像我们刚才演示的，或者我们使用UIkit Dynamic来做的例子，或者像Facebook的Pop框架）都是经过平衡的过程。就像[Andy Matuschar指出](https://twitter.com/andy_matuschak/status/464790108072206337)UIView和CAAnimation动画和其他任务相比，更少受系统的影响，因为渲染在你的应用处于更高的优先级。
 
 ##Back to the Mac
 ##回到Mac
 
 There’s nothing like UIKit Dynamics available on Mac at this time. If you want to create truly interactive animations here, you have to take the route of driving those animations yourself. Now that we’ve already shown how to implement this on iOS, it’s very simple to make the same example work on OS X; check out the full project on GitHub. These are the things that need to be changed:
 
-现在在Mac中还没有UIKit Dynamic。如果你想在Mac中创建一个真实的交互动画，你必须自己去实现这些动画。我们已经想你展示如何在iOS中实现这些动画，所以在OS X中实现相似的功能也是非常简单的。你可以查看在GitHub中的完整项目，如果你想要应用到OS X中，这里还有一些地方需要修改：
+现在在Mac中还没有UIKit Dynamic。如果你想在Mac中创建一个真实的交互动画，你必须自己去实现这些动画。我们已经想你展示如何在iOS中实现这些动画，所以在OS X中实现相似的功能也是非常简单的。你可以查看在GitHub中的[完整项目](https://github.com/objcio/issue-12-interactive-animations-osx)，如果你想要应用到OS X中，这里还有一些地方需要修改：
 
 - The first thing to change is the Animator. On the Mac, there is no CADisplayLink, but instead, a CVDisplayLink, which has a C-based API. Setting it up is a bit more work, but just as straightforward.
 
@@ -459,14 +453,14 @@ There’s nothing like UIKit Dynamics available on Mac at this time. If you want
 
 These are the only changes we need to make to port our animation code to the Mac. For a simple view like this, it works really well. For more complex things, you might not want to animate the frame, but use transform instead, which is the topic of a blogpost on OS X Animations by Jonathan Willing.
 
-上面就是我们需要在Mac中使用我们的动画效果的代码所需要做的改变。对于想这样的简单界面，它能很好的胜任。但对于更复杂的动画，你可以不能想通过改变界面的frame来实现了，你可以用transform来代替，你可以阅读一下Jonathan Willing写的关于OS X的以前博客。
+上面就是我们需要在Mac中使用我们的动画效果的代码所需要做的改变。对于想这样的简单界面，它能很好的胜任。但对于更复杂的动画，你可以不能想通过改变界面的frame来实现了，你可以用transform来代替，你可以阅读一下Jonathan Willing写的关于[OS X动画](http://jwilling.com/osx-animations)的以前博客。
 
 ###Facebook’s POP Framework
 ###Facebook的pop框架
 
 There has been quite a bit of buzz in the last weeks around Facebook’s POP framework. This is the animation engine that powers its Paper app. It operates very similar to the example above of driving your own animations, but it comes in a neat package with a lot more flexibility.
 
-上个星期围绕着Facebook的Pop框架有很多的议论。这是Paper应用背后的动画引擎。它的操作非常像我们上面提到的驱动自己的动画的例子，但是它有一个非常灵活整洁的包。
+上个星期围绕着Facebook的[Pop框架](https://github.com/facebook/pop)有很多的议论。这是Paper应用背后的动画引擎。它的操作非常像我们上面提到的驱动自己的动画的例子，但是它有一个非常灵活整洁的包。
 
 So, let’s try to make our own manually driven animation work with POP instead. Since we already had our own spring animation packaged into its own class, the change is pretty trivial. All we have to do is instantiate a POP animation instead of our own one, and add this to the view:
 
@@ -488,7 +482,7 @@ So, let’s try to make our own manually driven animation work with POP instead.
 
 You can find the full working example using POP on GitHub.
 
-你可以在GitHub中找到使用Pop的完整例子。
+你可以在[GitHub](https://github.com/objcio/issue-12-interactive-animations-pop)中找到使用Pop的完整例子。
 
 It’s super easy to get it to work, and it’s pretty straightforward to create more complex animations. But the real power of it lies in the fact that it enables you to create truly interactive and interruptible animations, as we have talked about before, because the animations it supports out of the box take the velocity as input. If you plan your interactions from the get-go to be interruptible at any time, a framework like POP helps you to implement this in a way that ensures animations always stay smooth.
 
@@ -507,7 +501,7 @@ With iOS 7’s shift away from visual imitation of real-world objects toward a s
 
 A special thanks goes to Loren Brichter for his advice on this article!
 
-非常感谢Loren Brichter给这篇文章的一些意见。
+非常感谢[Loren Brichter](https://twitter.com/lorenb)给这篇文章的一些意见。
 
 
 More articles in issue #12
