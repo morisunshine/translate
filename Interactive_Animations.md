@@ -1,7 +1,3 @@
-Interactive Animations
-交互动画
-===
-
 Issue #12 Animations, May 2014
 By Chris Eidhof and Florian Kugler
 
@@ -306,6 +302,8 @@ To implement this, we first create our own Animator class, which drives the anim
 
 The method is implemented below. First, based on the time interval, we calculate a force, which is a combination of the spring force and the friction force. Then we update the velocity with this force, and adjust the view’s center accordingly. Finally, if the speed gets low and the view is at its goal, we stop the animation:
 
+这个方法会在下面被实现。首先，根据时间间隔我们来计算由弹力和摩擦力结合的力。然后根据速率来更新这个力，再调整界面的中心位置。最后，如果这个界面的开始减速并且即将到达结束位置时，我们就停止这个动画：
+
     - (void)animationTick:(CFTimeInterval)dt finished:(BOOL *)finished
     {
         static const float frictionConstant = 20;
@@ -334,10 +332,14 @@ The method is implemented below. First, based on the time interval, we calculate
 
 That’s all there is to it. We capsulated this method in a SpringAnimation object. The only other method in this object is the initializer, which takes the view to animate, the target point for the view’s center (in our case, it’s either the center point for the opened state, or the closed state), and the initial velocity.
 
+这就是这个方法里的全部内容。我们把这个方法封装到一个SpringAnimation对象中。这个类中其他的方法还有是界面动画的初始化方法，这个界面中心的目标位置（在我们的例子中，就是打开状态的中心位置，或者关闭状态的中心位置）和初始的速率。
+
 ###Adding the Animation to the View
 ###将动画添加到界面上
 
 Our view class is exactly the same as in the UIDynamics example: it has a pan recognizer and updates its center based on the pan gestures. It sends out the same two delegate methods, which we will implement to initialize our animation. First of all, when the user starts dragging, we cancel all animations:
+
+我们的界面类刚好和UIDynamic例子中的一样：它有个拖动手势和根据拖动手势来更新中心位置。它也有两个同样的delegate 方法，这两个方法会实现我们的初始化。首先，一旦用户开始拖动时，我们就停止所有动画：
 
     - (void)draggableViewBeganDragging:(DraggableView *)view
     {
@@ -345,6 +347,8 @@ Our view class is exactly the same as in the UIDynamics example: it has a pan re
     }
 
 After the dragging ends, we start our animation with the last velocity value from the pan gesture. The target point is calculated from the paneState:
+
+一旦这个拖动结束，我们就根据从拖动手势中的得到的最后一个速率值来开始我们的动画。动画的结束位置是从拖动状态中的计算出来的：
 
     - (void)draggableView:(DraggableView *)view draggingEndedWithVelocity:(CGPoint)velocity
     {
@@ -362,6 +366,8 @@ After the dragging ends, we start our animation with the last velocity value fro
 
 The only thing left to do is add the tap animation and that is relatively easy. We toggle the state and start animating. If there is a spring animation, we start with that velocity. If the spring animation is nil, the initial velocity will be CGPointZero. To understand why it still animates, look at the animationTick:finished: code. When the initial velocity is zero, the spring force will slowly keep increasing the velocity until the pane arrives at the target center point:
 
+剩下来要做的只有添加点击动画了，这很简单。我们触发这个状态，并且开始动画。如果这里有个弹力动画，我们就用速率来启动它。如果这个弹力动画是nil，那么这个开始速率就是CGPointZero。想要知道为什么这个动画依然会有，就去看`animationTick:finished:`里的代码。当这个起始速率为0的时候，弹力就会缓慢地保持速率的增长直到拖动到目的中心位置：
+
     - (void)didTap:(UITapGestureRecognizer *)tapRecognizer
     {
         PaneState targetState = self.paneState == PaneStateOpen ? PaneStateClosed : PaneStateOpen;
@@ -370,9 +376,11 @@ The only thing left to do is add the tap animation and that is relatively easy. 
     }
 
 ###The Animation Driver
-###动画驱动
+###动画驱动者
 
 Finally, the last part we need is the Animator, which is the driver of the animations. The animator is a wrapper around the display link. Because each display link is coupled to a specific UIScreen, we initialize our animator with a specific screen. We set up a display link, and add it to the run loop. Because there are no animations yet, we start in a paused state:
+
+最后，我们需要一个Animator，也就是动画的驱动者。Animator是displayLink的封装者。因为每个displayLink都是链接一个指定的`UIScreen`。我们根据这个指定的UIScreen来初始化我们的Animator。我们初始化一个DisplayLink，并且将他加入到RunLoop。因为现在还没有动画，我们是停止状态开始的：
 
     - (instancetype)initWithScreen:(UIScreen *)screen
     {
@@ -388,6 +396,8 @@ Finally, the last part we need is the Animator, which is the driver of the anima
 
 Once we add the animation, we make sure that the display link is not paused anymore:
 
+一旦我们添加了这个动画，我们就肯定这个DisplayLink已经不再是停止状态了：
+
     - (void)addAnimation:(id<Animation>)animation
     {
         [self.animations addObject:animation];
@@ -397,6 +407,8 @@ Once we add the animation, we make sure that the display link is not paused anym
     }
 
 We set up the display link to call animationTick:, and on each tick we iterate over the animations, send them a message, and that’s it. If there are no animations left, we pause the display link:
+
+我们创建了这个DisplayLink来调用`animationTick:`方法，在每个Tick中，我们都迭代它的动画，并且发送一个消息。如果这里已经没有动画了，我们就停止这个DisplayLink。
 
      - (void)animationTick:(CADisplayLink *)displayLink
      {
@@ -415,29 +427,52 @@ We set up the display link to call animationTick:, and on each tick we iterate o
 
 The entire project is available on GitHub.
 
+完整的项目在GitHub中。
+
 ###Tradeoffs
-###Tradeoffs
+###平衡
 
 It’s important to keep in mind that driving animations via display links (as demonstrated above or by using UIKit Dynamics or something like Facebook’s POP framework) comes with a tradeoff. As Andy Matuschak pointed out UIView and CAAnimation animations are less likely to be affected by other tasks running on the system, because the render server runs at a higher priority than your app.
+
+记住我们是通过DisplayLink来驱动动画这一点非常重要（就像我们刚才演示的，或者我们使用UIkit Dynamic来做的例子，或者像Facebook的Pop框架）都是经过平衡的过程。就像Andy Matuschar
+指出UIView和CAAnimation动画和其他任务相比，更少受系统的影响，因为渲染在你的应用处于更高的优先级。
 
 ##Back to the Mac
 ##回到Mac
 
 There’s nothing like UIKit Dynamics available on Mac at this time. If you want to create truly interactive animations here, you have to take the route of driving those animations yourself. Now that we’ve already shown how to implement this on iOS, it’s very simple to make the same example work on OS X; check out the full project on GitHub. These are the things that need to be changed:
 
+现在在Mac中还没有UIKit Dynamic。如果你想在Mac中创建一个真实的交互动画，你必须自己去实现这些动画。我们已经想你展示如何在iOS中实现这些动画，所以在OS X中实现相似的功能也是非常简单的。你可以查看在GitHub中的完整项目，如果你想要应用到OS X中，这里还有一些地方需要修改：
+
 - The first thing to change is the Animator. On the Mac, there is no CADisplayLink, but instead, a CVDisplayLink, which has a C-based API. Setting it up is a bit more work, but just as straightforward.
+
+- 第一个要修改的就是Animator。在Mac中没有`CADisplayLink`，但是取而代之的有`CVDisplayLink`，它是以C语言为基础的API。创建它需要做更多的工作，但也是很简单的。
 
 - Our spring animation on iOS adjusts the center of the view. An NSView doesn’t have a center property, so instead we animate the frame’s origin.
 
+- iOS中的弹力动画是基于调整界面的中心位置来实现的。而OS X中的NSView类没有中心点这个property，所以我们用fram中的origin来代替。
+
 - On the Mac, there are no gesture recognizers. Instead, we have to implement mouseDown:, mouseUp:, and mouseDragged: in our custom view subclass.
+
+- 在Mac中是没有手势的，所以我要在我们自定义的View子类中实现`mouseDown:`, `mouseUp:`, 和 `mouseDragged`
+
+
 These are the only changes we need to make to port our animation code to the Mac. For a simple view like this, it works really well. For more complex things, you might not want to animate the frame, but use transform instead, which is the topic of a blogpost on OS X Animations by Jonathan Willing.
+
+上面就是我们需要在Mac中使用我们的动画效果的代码所需要做的改变。对于想这样的简单界面，它能很好的胜任。但对于更复杂的动画，你可以不能想通过改变界面的frame来实现了，你可以用transform来代替，你可以阅读一下Jonathan Willing写的关于OS X的以前博客。
 
 ###Facebook’s POP Framework
 ###Facebook的pop框架
 
 There has been quite a bit of buzz in the last weeks around Facebook’s POP framework. This is the animation engine that powers its Paper app. It operates very similar to the example above of driving your own animations, but it comes in a neat package with a lot more flexibility.
 
+上个星期围绕着Facebook的Pop框架有很多的议论。这是Paper应用背后的动画引擎。它的操作非常像我们上面提到的驱动自己的动画的例子，但是它有一个非常灵活整洁的包。
+
 So, let’s try to make our own manually driven animation work with POP instead. Since we already had our own spring animation packaged into its own class, the change is pretty trivial. All we have to do is instantiate a POP animation instead of our own one, and add this to the view:
+
+所以让我们动手用Pop来驱动我们的动画。因为我们已经在我们自己的类中已经封装了我们的弹力动画了，这些改变和Pop相比已经非常微不足道了。我们所要做的就是做一个POP动画的示例来代替我们刚才自己做的例子，将下面这段代码加入到界面类中：
+
+
 
     - (void)animatePaneWithInitialVelocity:(CGPoint)initialVelocity
     {
@@ -453,16 +488,26 @@ So, let’s try to make our own manually driven animation work with POP instead.
 
 You can find the full working example using POP on GitHub.
 
+你可以在GitHub中找到使用Pop的完整例子。
+
 It’s super easy to get it to work, and it’s pretty straightforward to create more complex animations. But the real power of it lies in the fact that it enables you to create truly interactive and interruptible animations, as we have talked about before, because the animations it supports out of the box take the velocity as input. If you plan your interactions from the get-go to be interruptible at any time, a framework like POP helps you to implement this in a way that ensures animations always stay smooth.
 
+使用它非常简单，并且通过它我们可以实现很多更复杂的动画。但是它真正强大的地方在于它能够实现真正的可交互和可中断的东湖，就想我们上面提到的那样，因为它支持以速率作为参数来满足一定的需求。如果你打算从一开始到被中断的任何时候都能交互，像POP这样的框架就能帮你实现这些动画，并且始终保持流畅。
+
 If you need more than what POPSpringAnimation and POPDecayAnimation can do out of the box, POP also comes with a POPCustomAnimation class, which basically is a convenient wraparound display link to drive your own animation in a callback block that gets called on each animation tick.
+
+如果你不满足于`POPSpringAnimation`和`POPDecayAnimation`来处理的话，POP来提供了`POPCustomAnimation`类，它是在每次动画Tick时会调用一个回掉block来实现封装的DisplayLink驱动我们的动画的转变。
 
 ##The Road Ahead
 ##展望未来
 
 With iOS 7’s shift away from visual imitation of real-world objects toward a stronger focus on the UI’s behavior, truly interactive animations are a great way to stand out. They’re also a way to extend the magic of the original iPhone’s scrolling behavior into every aspect of the interaction. To make this work, it’s important to consider those interactions early on in the design instead of just bolting on animations late in the development process.
 
+随着iOS7中从对真实世界对象拟物表现到如今更加关注于交互行为，真实的交互动画前方的道路变得越来越明显。这还有一个方法来扩大最初iPhone的滑动行为的魔力到交互的每个方面。为了让这些魔力实现，在设计时就要考虑这些交互是非常重要的，而不是在开发时才想到这些动画。
+
 A special thanks goes to Loren Brichter for his advice on this article!
+
+非常感谢Loren Brichter给这篇文章的一些意见。
 
 
 More articles in issue #12
