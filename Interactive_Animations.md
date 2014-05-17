@@ -10,7 +10,7 @@
 
 然而现在有一些apps给我一种始终在控制动画的体验，我们可以直接操作那些我在用的动画。当我们将这些应用和其他的应用相比较之后，我们就能感觉到明显的区别。这些应用中最优秀的有最初的Twitter iPad app， 和现在的facebook paper。但目前，使用直接操作为主并且可以中断动画的应用仍然很少。这就给我们做出更好的应用提供了机会，让我们的应用有更不同的，更高质量的体验。
 
-##真实交互动画的挑战
+##真实交互式动画的挑战
 
 当我们用UIView 或者 CAAnimation 来实现交互式动画时会有两个大问题: 这些动画会将屏幕上的试图和layer上的实际动画内容分离开来，并且他们直接操作这些实际动画内容。
 
@@ -43,7 +43,7 @@ Core Animation 是通过分离layer的模型和屏幕上的界面(表示层)的�
 让我们看一下我们怎样来实现一个可交互并且可以中断的动画。为了实现这个效果，我们要做一个类似于控制中心板的东西:
 
 <video controls="1" style="display:block;max-width:100%;height:auto;border:0;">
-  <source src="/images/issue-12/interactive-animation.mov">
+  <source src="http://www.objc.io/images/issue-12/interactive-animation.mov">
 </video>
 
 这个控制板有两个状态：打开和关闭。你可以通过点击来切换这两个状态，或者通过上下拖动来调调整它向上或向下。我要将这个控制板中每个东西都做到可以交互，甚至是在动画的过程中也可以，这是一个很大的挑战。比如，当你在这个控制板还没有切换到打开状态的动画过程中，你点击了它，那么它应该从现在这个点的位置马上回到关闭状态的位置。在现在很多的应用中，大部分都是用默认的动画API，你必须要等一个动画结束之后你才能做自己想做的事情。或者，你不需要等，但是你会看到一个不连续的速率曲线。我们要解决这个问题。
@@ -52,7 +52,7 @@ Core Animation 是通过分离layer的模型和屏幕上的界面(表示层)的�
 
 随着iOS7的发布，苹果向我们展示了一个叫UIKit 力学的动画框架(可以参见WWDC 2013 sessions [206](https://developer.apple.com/videos/wwdc/2013/index.php?id=206) and [221](https://developer.apple.com/videos/wwdc/2013/index.php?id=221))。UIKit 力学是一个基于模拟物理引擎的框架，只要你添加指定的行为到动画对象上来实现[UIDynamicItem](https://developer.apple.com/library/ios/documentation/uikit/reference/UIDynamicItem_Protocol/Reference/Reference.html)协议就能实现很多动画。这个框架非常强大并且它能够将很多物体像附着行为和碰撞行为一样结合起来，让我们简单地看一下[动力学目录](https://developer.apple.com/library/ios/samplecode/DynamicsCatalog/Introduction/Intro.html)，看看有什么可以给我们启发。
 
-因为UIKit动力学中的的动画是被间接驱动的，就像我在上面提到的，这为我们实现真实的交互动画成为可能，它能在任何时候被中断并且可以展示流畅的动画。同时，UIKit动力学在物理层的抽象上能完全胜任我们一般情况下在用户界面中的所需要的所有动画。其实在大部分情况下，我们只会用到其中的一小部分功能。
+因为UIKit动力学中的的动画是被间接驱动的，就像我在上面提到的，这为我们实现真实的交互式动画成为可能，它能在任何时候被中断并且可以展示流畅的动画。同时，UIKit动力学在物理层的抽象上能完全胜任我们一般情况下在用户界面中的所需要的所有动画。其实在大部分情况下，我们只会用到其中的一小部分功能。
 
 ####定义行为
 
@@ -328,7 +328,7 @@ k是弹力系数，x是界面到目标结束位置的距离（也就是弹力的
 
 ##回到Mac
 
-现在Mac中还没有UIKit动力学。如果你想在Mac中创建一个真实的交互动画，你必须自己去实现这些动画。我们已经向你展示了如何在iOS中实现这些动画，所以在OS X中实现相似的功能也是非常简单的。你可以查看在GitHub中的[完整项目](https://github.com/objcio/issue-12-interactive-animations-osx)，如果你想要应用到OS X中，这里还有一些地方需要修改：
+现在Mac中还没有UIKit动力学。如果你想在Mac中创建一个真实的交互式动画，你必须自己去实现这些动画。我们已经向你展示了如何在iOS中实现这些动画，所以在OS X中实现相似的功能也是非常简单的。你可以查看在GitHub中的[完整项目](https://github.com/objcio/issue-12-interactive-animations-osx)，如果你想要应用到OS X中，这里还有一些地方需要修改：
 
 - 第一个要修改的就是Animator。在Mac中没有`CADisplayLink`，但是取而代之的有`CVDisplayLink`，它是以C语言为基础的API。创建它需要做更多的工作，但也是很简单。
 
@@ -338,7 +338,7 @@ k是弹力系数，x是界面到目标结束位置的距离（也就是弹力的
 
 上面就是我们需要在Mac中使用我们的动画效果在代码所需要做的修改。对于像这样的简单界面，它能很好的胜任。但对于更复杂的动画，你可能就不会想通过改变界面的frame来实现了，我们可以用transform来代替，浏览Jonathan Willing写的关于[OS X动画](http://jwilling.com/osx-animations)的以前博客你会获益良多。
 
-###Facebook的pop框架
+###Facebook的POP框架
 
 上个星期围绕着Facebook的[POP框架](https://github.com/facebook/pop)讨论络绎不绝。POP框架是Paper应用背后支持的动画引擎。它的操作非常像我们上面讲的驱动动画的例子，但是它封装到一个非常灵巧的程序包中。
 
@@ -364,9 +364,11 @@ k是弹力系数，x是界面到目标结束位置的距离（也就是弹力的
 
 ##展望未来
 
-随着iOS7中从对拟物化的关注转变到如今对交互行为的关注，真实交互动画通向未来的大道变得越来越明显。我们还有很多方法可以将最初iPhone中滑动行为的魔力延伸到交互的每个方面。为了让这些魔力成为现实，我们就不能在开发过程中才想到这些动画，而是应该在设计时就要考虑这些交互，这一点非常重要。
+随着iOS7中从对拟物化的关注转变到如今对交互行为的关注，真实交互式动画通向未来的大道变得越来越明显。我们还有很多方法可以将最初iPhone中滑动行为的魔力延伸到交互的每个方面。为了让这些魔力成为现实，我们就不能在开发过程中才想到这些动画，而是应该在设计时就要考虑这些交互，这一点非常重要。
 
 非常感谢[Loren Brichter](https://twitter.com/lorenb)给这篇文章提出的一些意见。
 
 
-More articles in issue #12
+[话题12下的更多文章](http://objccn.io/issue-12/)
+
+原文 [Interactive Animations](http://www.objc.io/issue-12/interactive-animations.html)
