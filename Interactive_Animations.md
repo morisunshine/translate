@@ -1,4 +1,4 @@
-在2007年，斯蒂芬乔布斯在第一次介绍iPhone的时候，iPhone的触摸屏交互简直就像是一种魔法。最好的例子就是在他[第一次滑动TableView的展示上](https://www.youtube.com/watch?v=t4OEsI0Sc_s&t=16m9s)。你可以感受到当时观众的反应是多么惊讶，但是对于现在的我们来说早已习以为常。在展示的后面一部分，他特别指出当他给别人看了这个滑动例子，别人说的一句话: [“但这个界面滑动的时候我就已经被征服了”](https://www.youtube.com/watch?v=t4OEsI0Sc_s&t=16m9s).
+在2007年，斯蒂芬乔布斯在第一次介绍iPhone的时候，iPhone的触摸屏交互简直就像是一种魔法。最好的例子就是在他[第一次滑动TableView的展示上](https://www.youtube.com/watch?v=t4OEsI0Sc_s&t=16m9s)。你可以感受到当时观众的反应是多么惊讶，但是对于现在的我们来说早已习以为常。在展示的后面一部分，他特别指出当他给别人看了这个滑动例子，别人说的一句话: [“当这个界面滑动的时候我就已经被征服了”](https://www.youtube.com/watch?v=t4OEsI0Sc_s&t=16m9s).
 
 是什么样的滑动能让人有‘哇哦’的效果呢？
 
