@@ -1,9 +1,13 @@
 Replicating UIScrollView’s deceleration with Facebook Pop
+使用FaceceBook 的Pop框架替换UIScrollView的减速动画
 ====
 
 Earlier this week Ole Begemann wrote a [really great tutorial on how UIScrollViews work](http://oleb.net/blog/2014/04/understanding-uiscrollview/), and to explain it effectively, he even created [a really simple scroll view, written from scratch.](https://github.com/ole/CustomScrollView)
 
+这个星期的早些时候 Ole Begemann 写了一篇[UIScrollView 是如何工作的很棒的教程](http://oleb.net/blog/2014/04/understanding-uiscrollview/)，为了更有效地描述，他甚至还[自己从头开始写了一个简单的ScrollView。](https://github.com/ole/CustomScrollView)
+
 The setup was quite simple: Use a UIPanGestureRecognizer, and change the bounds’ origin in response to translation of the pan gesture.
+
 
 Extending Ole’s custom scroll view to incorporate UIScrollView’s inertial scrolling seemed like a natural extension, and with Facebook’s recent release of Pop, I thought it writing a decelerating custom scroll view would be an interesting weekend project.
 
