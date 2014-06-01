@@ -122,16 +122,22 @@ POP能够这样做是因为它为我们提供了动画进度的常量回调函�
 
 So here’s how you’ll do the same thing we did earlier, but now with your own custom property. Specifically, we’ll animate bounds.origin.x and bounds.origin.y. You’ll see that the structure of the code largely remains the same, except for the initialisation of this giant POPAnimatableProperty.
 
+所以接下来就是和最开始做同样的事，但不同的是现在是用你自己自定义的property。尤其是，我们要将bounds的原点的x和y动画。代码的结构大部分是差不多的，除了巨大的POPAnimatableProperty的初始化。
 
 - The property name, as I understand, can be any arbitrary string. In this case, I’ve taken it to be @"com.rounak.bounds.origin" 
+- property名字，个人理解，它可以是任意字符串。在这个案例中，我给命名为@"com.rounak.bounds.origin"
 
 - There’s also an initializer block with POPMutableAnimatableProperty as the argument. (I think this initialisation pattern is called the builder pattern.)
+- 这里也有一个使用POPMutableAnimatableProperty作为参数的初始化block。（我觉得这个初始化模式应该被命名为生成器模式）
 
 - POPMutableAnimatableProperty has two important properties, readBlock and writeBlock. In readBlock you’ll have to feed data to Pop, and writeBlock you’ll have to retrieve that data, and update your view. The readBlock is called once whereas the writeBlock is called on each frame update of the display (via CADisplayLink).
+- POPMutableAnimatableProperty有两个重要的property，readBlock 和 writeBlock。在readBlock中，你需要输入数据给POP，而在writeBlock中，你需要回复这些数据，然后更新你的界面。readBlcok只会被调用一次，而每当更新显示（比如CADisplayLink）的帧时就会调用writeBlock。
 
 - Pop internally converts everything into vectors, and hence it asks and gives you data in the form of a linear array of CGFloats.
+- POP内部会将所有东西都转换成向量，因此他会给我们提供的数据都是以由CGFloat组成的线性数组。
 
 - In readBlock you simply assign bounds.origin.x and bounds.origin.y to values[0] and values[1] respectively.
+- 在readBlock中我们简单地将bounds的原点x和y分别赋值给values[0]和values[1]。
 
 
 	prop.readBlock = ^(id obj, CGFloat values[]) {
@@ -140,6 +146,7 @@ So here’s how you’ll do the same thing we did earlier, but now with your own
 	};
 
 - And in writeBlock you read values[0] (bounds.origin.x) and values[1] (bounds.origin.y) and update your view’s bounds.
+- 然后在 writeBlock 中，你读取values[0](bounds.origin.x) 和 values[1](bounds.origin.y)，并且更新你的视图的bounds
 
 	prop.writeBlock = ^(id obj, const CGFloat values[]) {
 	    CGRect tempBounds = [obj bounds];
@@ -149,23 +156,30 @@ So here’s how you’ll do the same thing we did earlier, but now with your own
 	};
 
 - The magic happens in the writeBlock which is called each time with values that follow a decay (or an oscillating) curve.
+- 当writeBlock中的值随着衰减（或震荡）曲线被每次调用时，神奇的事情发生了。
 
 - You’ll notice that since we’re operating in just two dimensions here, our velocity is CGPoint, and not CGRect.
+- 你会注意到当我们两个方向去操作时，我们的速率是CGPoint而不是CGRect。
 
 Here’s the combined code:
+下面是整合的代码：
 
 	//get velocity from pan gesture
+	//从滑动手势中得到速率
 	CGPoint velocity = [panGestureRecognizer velocityInView:self];
 	if (self.bounds.size.width >= self.contentSize.width) {
 	    //make movement zero along x if no horizontal scrolling
+	    //当没有水平方向滑动时就让x方向的移动为0
 	    velocity.x = 0;
 	}
 	if (self.bounds.size.height >= self.contentSize.height) {
 	    //make movement zero along y if no vertical scrolling
+	    //当没有垂直方向滑动时就让y方向的移动为0
 	    velocity.y = 0;
 	}
 	 
 	//we need the negative velocity of what we get from the pan gesture, so flip the signs
+	//我的需要从滑动手势中的到速率的负数，所以我们加上了符号。
 	velocity.x = -velocity.x;
 	velocity.y = -velocity.y;
 	 
@@ -173,11 +187,13 @@ Here’s the combined code:
 	 
 	POPAnimatableProperty *prop = [POPAnimatableProperty propertyWithName:@"com.rounak.boundsY" initializer:^(POPMutableAnimatableProperty *prop) {
 	    // read value, feed data to Pop
+	    // 读取数据，输入数据给POP
 	    prop.readBlock = ^(id obj, CGFloat values[]) {
 	        values[0] = [obj bounds].origin.x;
 	        values[1] = [obj bounds].origin.y;
 	    };
 	    // write value, get data from Pop, and apply it to the view
+	    // 写数据，从POP中得到数据，并且将它应用到视图上。
 	    prop.writeBlock = ^(id obj, const CGFloat values[]) {
 	        CGRect tempBounds = [obj bounds];
 	        tempBounds.origin.x = values[0];
@@ -185,6 +201,7 @@ Here’s the combined code:
 	        [obj setBounds:tempBounds];
 	    };
 	    // dynamics threshold
+	    动态临界值
 	    prop.threshold = 0.01;
 	}];
 	 
@@ -192,4 +209,5 @@ Here’s the combined code:
 	decayAnimation.velocity = [NSValue valueWithCGPoint:velocity];
 	[self pop_addAnimation:decayAnimation forKey:@"decelerate"];
 
-The entire project with the deceleration [can be found on GitHub](https://github.com/rounak/CustomScrollView/tree/custom-scroll-with-pop). Have any feedback about this topic? I’m [@r0unak](http://twitter.com/r0unak) on Twitter. Also, try [Design Shots, a Dribbble app I helped make.](https://itunes.apple.com/us/app/design-shots/id792517951?mt=8)
+The entire project with the deceleration [can be found on GitHub](https://github.com/rounak/CustomScrollView/tree/custom-scroll-with-pop).
+实现衰减效果的完整项目[可以在GitHub中找到](https://github.com/rounak/CustomScrollView/tree/custom-scroll-with-pop)。
