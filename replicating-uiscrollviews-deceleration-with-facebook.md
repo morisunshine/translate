@@ -63,20 +63,25 @@ Here’s the basic flow of the code fragment embedded below:
 - 我们想要运动视图的bounds（尤其是bound中的原点）所以我们就创建了一个新的带kPOPViewBounds的POPDecayAnimation。
 
 	POPDecayAnimation *decayAnimation = [POPDecayAnimation animationWithPropertyNamed:kPOPViewBounds];
-
+ 
 - Pop expects the velocity to be of the same coordinate space as the property you’re trying to animate. The value will be an NSNumber for alpha (CGFloat), CGPoint wrapped in NSValue for center, CGRect wrapped in NSValue for bounds and so on. As you might have guessed, the change in the property value during the animation is a factor of the corresponding velocity component.
+- POP希望速率和你希望动画的property在相同的坐标系下。这个值可能是指向透明度的NSNumber（CGFloat），CGPoint被封装在NSValue来指向中心，CGRect被封装在NSValue来指向范围，等等。你可能已经猜到了，在动画过程中，property值的变化就相当于是速率。
 
 - In our case, animating bounds means our velocity will be a CGRect, and its origin.x and origin.y values correspond to the change in the bounds' origin. Similarly, the size.width and size.height velocity components correspond to the change in the bounds’ size.
+- 在我们这个案例中，我们要使bounds动画，这就意味我们的速率会是CGRect，并且它的原点的x和y值相当于是bounds的原点上的变化。类似的，尺寸中的宽和高的速率就相当于bounds的尺寸变化。
 
 - We don’t want to change the size of the bounds, so lets keep that velocity component zero always. Feed in the origin.x and origin.y values of the velocity with the pan gesture’s velocity. Wrap the whole thing into an NSValue and assign it to decayAnimation.velocity
+- 我们不想改变bounds中的尺寸，所以就让尺寸的速率一直保持0。将原点的x和y值的速率作为滑动手势的速率输入。把这些封装到一个NSValue中并将它赋值给decayAnimation.velocity。
 
 	decayAnimation.velocity = [NSValue valueWithCGRect:CGRectMake(velocity.x, velocity.y, 0, 0)];
 
 - Finally, add the decayAnimation to the view using the pop_addAnimation: method with any arbitrary key you want.
+- 最后，通过使用`pop_addAnimation: `方法将decayAnimation添加到视图中，并且给添加任意想要的键值。
 
 	[self pop_addAnimation:decayAnimation forKey:@"decelerate"];
 
 Here’s the combined code:
+这里是完成的代码：
 
 
 	//get velocity from pan gesture
@@ -105,14 +110,18 @@ Here’s the combined code:
 ![image](http://media.tumblr.com/185a108dfa8a706c90985b18198bd39c/tumblr_inline_n4z4hwnQiv1qh9cw7.gif)
 
 With this you should have the basic deceleration working. You’ll notice that if your velocity is high, the view will scroll beyond its contentSize, but this could easily be solved by overriding setBounds: and adding checks to see that the bounds origin do not go beyond the thresholds. I’m surprised that Pop doesn’t add these checks itself.
+通过上面的代码，我们已经实现了基本的衰减动画。有可能会注意到当你的速率很高的时候，这个视图会滑到超过他的`contentSize`，没关系，这个很容易解决，只要我们重写`setBounds: `方法并且添加判断这个bounds是否将要超过它contentSize。让我惊讶的是，POP自己没有添加这些判断。
 
 -----
 
 A really interesting aspect of Pop is the ability to animate any property at all, not just ones declared as animatable by UIKit. Since we’re just animating the bounds’ origin, I thought this was a good chance to try out Pop`s custom property animation.
+非常有趣的是POP能够让所有的property都能实现动画效果，而不仅仅是那些被UIKit定义可以实现动画的property。因为我们只是让bounds的原点动画了，所以我们可以实验一下POP是否真的能让所有的property都能动画。
 
 Pop lets you do this is by giving you constant callbacks with the progress of the animation, so that you can update your view accordingly. It takes care of the hard part of handling timing, converting the timing into the value of your property, decaying or oscillating the animation etc.
+POP能够这样做是因为它为我们提供了动画进度的常量回调函数，这样我们就能即使更新我们的界面。它负责最难的一部分--处理定时，将这些定时转换成你的property的值，衰减或者震荡等等。
 
 So here’s how you’ll do the same thing we did earlier, but now with your own custom property. Specifically, we’ll animate bounds.origin.x and bounds.origin.y. You’ll see that the structure of the code largely remains the same, except for the initialisation of this giant POPAnimatableProperty.
+
 
 - The property name, as I understand, can be any arbitrary string. In this case, I’ve taken it to be @"com.rounak.bounds.origin" 
 
