@@ -3,43 +3,40 @@ Replicating UIScrollView’s deceleration with Facebook Pop
 ====
 
 Earlier this week Ole Begemann wrote a [really great tutorial on how UIScrollViews work](http://oleb.net/blog/2014/04/understanding-uiscrollview/), and to explain it effectively, he even created [a really simple scroll view, written from scratch.](https://github.com/ole/CustomScrollView)
-
-这个星期的早些时候 Ole Begemann 写了一篇[UIScrollView 是如何工作的很棒的教程](http://oleb.net/blog/2014/04/understanding-uiscrollview/)，为了更有效地描述，他甚至还[自己从头开始写了一个简单的ScrollView。](https://github.com/ole/CustomScrollView)
+这个星期的早些时候 Ole Begemann 写了一篇[很棒的教程，关于UIScrollView 是如何工作](http://oleb.net/blog/2014/04/understanding-uiscrollview/)，为了更有效地描述这个UIScrollView的工作机制，他甚至还[自己从头开始写了一个简单的ScrollView。](https://github.com/ole/CustomScrollView)
 
 The setup was quite simple: Use a UIPanGestureRecognizer, and change the bounds’ origin in response to translation of the pan gesture.
-这个过程其实非常简单， 用一个`UIPanGestureRecognizer`， 然后通过修改试图的`bounds' origin` 来对滑动手势的平移做出回应。
+这个过程其实非常简单， 用一个`UIPanGestureRecognizer`， 然后通过修改界面的bounds原点 来对滑动手势的平移做出响应。
 
 Extending Ole’s custom scroll view to incorporate UIScrollView’s inertial scrolling seemed like a natural extension, and with Facebook’s recent release of Pop, I thought it writing a decelerating custom scroll view would be an interesting weekend project.
-
-在Ole的自定义ScrollView中添加`UIScrollview`的惯性滑动行为是我们很自然能联想到的事，并且随着最近Facebook发布了POP动画引擎，让我觉得写一个自然减速的自定义ScrollView会是一个很有趣的周末项目。
+我们很容易联想到可以在Ole的自定义ScrollView中添加`UIScrollview`的惯性滑动行为，并且随着最近Facebook发布了POP动画引擎，让我觉得写出一个自然减速的自定义ScrollView会是一个很有趣的周末项目。
 
 In case you’re unaware, [Pop is Facebook’s recently open-sourced animation framework](http://iosdevtips.co/post/84160910513/exploring-facebook-pop) that powers the animations in Paper for iOS. The Pop API looks mostly like CoreAnimation, so it isn’t that difficult to learn.
-
-你可能不是很清楚，[POP 是Facebook最近开源的动画引擎框架](http://iosdevtips.co/post/84160910513/exploring-facebook-pop)，它是iOS中的Paper里所有动画背后的动画引擎。POP的API看起来很像`CoreAnimation`，所以学起来不是那么难。
+你可能不是很清楚，[POP 是Facebook最近开源的动画引擎框架](http://iosdevtips.co/post/84160910513/exploring-facebook-pop)，它是Paper for iOS里所有动画背后的动画引擎。Pop的API看起来很像`CoreAnimation`，所以学起来不是那么难。
 
 Two of the best things about Pop:
-关于为什么使用POP的两点最好的说明：
+关于为什么使用Pop的两点最好的说明：
 
 1. It gives you spring and decay animations out of the box
 1. 它可以很容易地实现弹力和衰变动画
 
 2. You can animate any property on any NSObject using Pop, not just the ones that are declared animatable in UIKit
-2. 使用POP你就可以使任何`NSOject`的子类中的任何property都能动画，而不仅仅是那些在`UIKit`框架中定义可以动画的那些类。
+2. 使用Pop你就可以使任何`NSOject`的子类中的任何property都实现动画，而不仅仅是那些在`UIKit`框架中被定义可以动画的那些类中的property。
 
 Given that Pop has built-in support for decaying animations, implementing UIScrollView’s deceleration isn’t very tough.
-考虑到POP能提供很好的衰减动画，所以在我们自定义的ScrollView中实现UIScrollView的衰减动画是不难的。
+考虑到Pop能提供很好的衰减动画，所以在我们自定义的ScrollView中实现UIScrollView的衰减动画是不难的。
 
 The main idea is to animate the bounds’ origin in a decaying fashion using the velocity off the UIPanGestureRecognizer in its ended state.
-主要想法是在UIPanGestureRecognizer的结束状态时，通过减少ScrollView的速率来衰减效果。
+主要想法是在UIPanGestureRecognizer的结束状态时，通过减少ScrollView的速率来实现衰减效果。
 
 So let’s begin. Start off by forking [my fork of Ole’s CustomScrollView project,](https://github.com/rounak/CustomScrollView) jump to the handlePanGesture: method in CustomScrollView.m. (Why start with my fork and not Ole’s project? He sets the translation to zero each time the gesture fires, which in turn resets the velocity. We, however, want the velocity to be preserved.)
-让我们开始吧。首先先Fork[Ole的CustomScrollView项目](https://github.com/rounak/CustomScrollView)。跳到CustomScrollView.m中的`handlePanGesture: `方法。（为什么我们要从我的Fork项目开始，而不是直接用Ole 的项目？因为他在每次手势触发的时候，都将平移设置成为0，这样就会把速率重置了，然而我们需要保护这些速率。）
+让我们开始吧。首先我们先在GitHub上Fork[Ole的CustomScrollView项目](https://github.com/rounak/CustomScrollView)。跳到CustomScrollView.m中的`handlePanGesture: `方法。（为什么我们要从我的Fork项目开始，而不是直接用Ole 的项目？因为他在每次手势触发的时候，都将平移设置成为0，这样就会把速率重置为0，然而我们是需要保护这些速率。）
 
 We want to start a decay animation only after the gesture has finished, so we’re interested in the UIGestureRecognizerStateEnded case of the switch statement.
 我们想要在手势已经结束的时候才开始衰减动画，所以我们只关心switch语句中`UIGestureRecognizerStateEnded`的情况。
 
 Here’s the basic flow of the code fragment embedded below:
-下面是代码片段的基本流程：
+下面是代码的基本思路：
 
 - We get the velocity of the gesture with the velocityInView: method.
 - 我们通过`velocityInView: `方法得到手势的速率。
@@ -60,38 +57,41 @@ Here’s the basic flow of the code fragment embedded below:
 - 我们发现通过`velocityInView: `方法得到的速率实际上并不是我们想要的，所以我们要修复这个问题。
 
 - We want to animate the bounds (specifically the bounds’ origin) so create a new POPDecayAnimation with the kPOPViewBounds property.
-- 我们想要运动视图的bounds（尤其是bound中的原点）所以我们就创建了一个新的带kPOPViewBounds的POPDecayAnimation。
+- 我们想要使界面的bounds（尤其是bound中的原点）动画，所以我们就创建了一个新的带kPOPViewBounds的POPDecayAnimation。
 
 	POPDecayAnimation *decayAnimation = [POPDecayAnimation animationWithPropertyNamed:kPOPViewBounds];
  
 - Pop expects the velocity to be of the same coordinate space as the property you’re trying to animate. The value will be an NSNumber for alpha (CGFloat), CGPoint wrapped in NSValue for center, CGRect wrapped in NSValue for bounds and so on. As you might have guessed, the change in the property value during the animation is a factor of the corresponding velocity component.
-- POP希望速率和你希望动画的property在相同的坐标系下。这个值可能是指向透明度的NSNumber（CGFloat），CGPoint被封装在NSValue来指向中心，CGRect被封装在NSValue来指向范围，等等。你可能已经猜到了，在动画过程中，property值的变化就相当于是速率。
+- Pop希望速率和你希望动画的property在相同的坐标系下。这个值可能是指向透明度的NSNumber（CGFloat），CGPoint被封装在NSValue来指向界面的中心，CGRect被封装在NSValue来指向bounds，等等。你可能已经猜到了，在动画过程中，property值的变化就相当于是速率。
 
 - In our case, animating bounds means our velocity will be a CGRect, and its origin.x and origin.y values correspond to the change in the bounds' origin. Similarly, the size.width and size.height velocity components correspond to the change in the bounds’ size.
-- 在我们这个案例中，我们要使bounds动画，这就意味我们的速率会是CGRect，并且它的原点的x和y值相当于是bounds的原点上的变化。类似的，尺寸中的宽和高的速率就相当于bounds的尺寸变化。
+- 在我们这个案例中，我们要使bounds动画，这就意味我们的速率会是CGRect，并且它的原点的x和y值的变化相当于是bounds的原点上的变化。类似的，尺寸中的宽和高的速率就相当于bounds的尺寸变化。
 
 - We don’t want to change the size of the bounds, so lets keep that velocity component zero always. Feed in the origin.x and origin.y values of the velocity with the pan gesture’s velocity. Wrap the whole thing into an NSValue and assign it to decayAnimation.velocity
-- 我们不想改变bounds中的尺寸，所以就让尺寸的速率一直保持0。将原点的x和y值的速率作为滑动手势的速率输入。把这些封装到一个NSValue中并将它赋值给decayAnimation.velocity。
+- 我们不想改变bounds中的尺寸，所以就让尺寸的速率一直保持0。将原点的x和y值的速率作为滑动手势的速率输入。把这些值封装到一个NSValue中并将它赋值给decayAnimation.velocity。
 
 	decayAnimation.velocity = [NSValue valueWithCGRect:CGRectMake(velocity.x, velocity.y, 0, 0)];
 
 - Finally, add the decayAnimation to the view using the pop_addAnimation: method with any arbitrary key you want.
-- 最后，通过使用`pop_addAnimation: `方法将decayAnimation添加到视图中，并且给添加任意想要的键值。
+- 最后，通过使用`pop_addAnimation: `方法将decayAnimation添加到界面中，并且给界面添加任意想要的键值。
 
 	[self pop_addAnimation:decayAnimation forKey:@"decelerate"];
 
 Here’s the combined code:
-这里是完成的代码：
+这里是组合的代码：
 
 
 	//get velocity from pan gesture
+	//从滑动手势中得到速率
 	CGPoint velocity = [panGestureRecognizer velocityInView:self];
 	if (self.bounds.size.width >= self.contentSize.width) {
 		    //make movement zero along x if no horizontal scrolling
+		    //当水平方向没有空间滑动就把平移为0
 		    velocity.x = 0; 
 	}
 	if (self.bounds.size.height >= self.contentSize.height) {
 		    //make movement zero along y if no vertical scrolling
+		    //当垂直方向没有空间滑动就把平移为0
 		    velocity.y = 0; 
 	}
 	 
@@ -110,7 +110,7 @@ Here’s the combined code:
 ![image](http://media.tumblr.com/185a108dfa8a706c90985b18198bd39c/tumblr_inline_n4z4hwnQiv1qh9cw7.gif)
 
 With this you should have the basic deceleration working. You’ll notice that if your velocity is high, the view will scroll beyond its contentSize, but this could easily be solved by overriding setBounds: and adding checks to see that the bounds origin do not go beyond the thresholds. I’m surprised that Pop doesn’t add these checks itself.
-通过上面的代码，我们已经实现了基本的衰减动画。有可能会注意到当你的速率很高的时候，这个视图会滑到超过他的`contentSize`，没关系，这个很容易解决，只要我们重写`setBounds: `方法并且添加判断这个bounds是否将要超过它contentSize。让我惊讶的是，POP自己没有添加这些判断。
+通过上面的代码，我们已经实现了基本的衰减动画。有可能会注意到当你的速率很高的时候，这个界面会滑到超过他的`contentSize`，没关系，这个很容易解决，只要我们重写`setBounds: `方法并且添加判断这个bounds是否将要超过它contentSize。让我惊讶的是，Pop自己没有添加这些判断。
 
 -----
 
@@ -138,7 +138,6 @@ So here’s how you’ll do the same thing we did earlier, but now with your own
 
 - In readBlock you simply assign bounds.origin.x and bounds.origin.y to values[0] and values[1] respectively.
 - 在readBlock中我们简单地将bounds的原点x和y分别赋值给values[0]和values[1]。
-
 
 	prop.readBlock = ^(id obj, CGFloat values[]) {
 		    values[0] = [obj bounds].origin.x;
