@@ -31,41 +31,78 @@ As the [article about bad practices in testing](http://www.objc.io/issue-15/bad-
 
 We are still finishing the initial version of our framework, and have just recently passed 1,000 test cases with more than 10 man months of effort spent on the project. Even though we had a clear vision of the project’s architecture, we’ve still had to change and adapt the code along the way. The ever-growing set of test cases have helped us do this.
 
+我们依然在完成我们框架的最初版本，并且在超过10个人月的努力下我们还是通过了将近1,000个测试。由于这样的努力，我们现在有一个比较清楚的架构，我们仍然需要沿着这个方向，去修改和适应我们的代码。这套不断增长的测试用例会帮我们做到这一点。
+
 They have given us a level of comfort with the quality of our code, and at the same time given us the ability to refactor and change the code while knowing that we didn’t break things. And we have been able to actually run our code from day one; we didn’t have to wait for all the pieces to be in place.
 
-How XCTest Works
+测试用例使我们的代码质量进入了一个很舒服的境界，并且我们又得到一个新的技能，就是在我们重构或者修改代码时，我们知道我们没有破坏其他东西。而且我们可以在项目开始的第一天就能运行我们的程序，而不用等到万事俱备。
+
+##How XCTest Works
+##XCTest 是怎么运作的
+
 Apple has some decent documentation on using XCTest. Tests are grouped into classes that subclass from XCTestCase. Each method that has a name starting with test is a test.
+
+苹果提供了一些关于XCTest的官方文档。测试被分配到不同的类，他们都是继承XCTestCase。每个以`test`为开头的方法都是一个测试用例。
 
 Because tests are simply classes and methods, we can add @property and helper methods to the class, as we see fit.
 
+因为测试是简单的类和方法，所以我们可以适当地加一些`@property`和辅助方法。
+
 In order to be able reuse code, we have a common superclass, TestCase, for all our test classes. This class subclasses from XCTestCase. All our test classes subclass from our TestCase.
+
+考虑到代码的重用性，我们的所有测试用例类都有一个共同的父类，就是`TestCase`，这个类也是`XCTestCase`的子类，所有的测试类都是我们的`TestCase`的子类。
 
 We then put shared helper methods into the TestCase class. And we even have properties on it that get pre-populated for each test.
 
-Naming
+然后我们把一些公用的辅助方法放在`TestCase`类中，并且加了一些property作为每个类的预置内容。
+
+##Naming
+##命名
+
 Since a test is simply a method that begins with the word test, a typical test method would look like this:
+
+因为测试用例仅仅只是一个以`test`为开头的方法，所以典型的测试方法看起来就像这样：
 
 - (void)testThatItDoesURLEncoding
 {
   // test code
 }
+
 All our tests start with the words “testThatIt”. Another frequently used way of naming tests is to use the method or class being tested, as in testHTTPRequest. But which class and method is being tested should be obvious by simply looking at the test.
+
+所有我们的测试用例中都是以“testThatIt”为开头。而另外一个用的比较频繁的就是命名方式就是“test+要测试的方法和类名”，比如像`testHTTPRequest`。但是这些类和方法测试需要很容易被找到。
 
 The “testThatIt” style shifts the focus to the desired outcome, which, in most cases, is more difficult to understand at first glance.
 
+“testThatIt”这类命名方式的将重点转移到期望结果上，但是大多数情况下，这很难让我们一眼就能找到。
+
 There is a test case class for each production code class, and one is named after the other, e.g. HTTPRequest and HTTPRequestTests. If a class gets a bit bigger, we use categories to split up the test by topics.
+
+这个有一个对应每个产品代码类的测试用例类，而且测试用例的名字是根据另一个方法名字，比如，HTTPRequest 和 HTTPRequestTests。如果一个类变得有点大，我们就可以根据主题用类别来将他们拆分开来。
 
 If we ever need to disable a test, we simply prefix the name with DISABLED:
 
+如果我们需要禁止一个测试用例，我们只需要在方法名字前加`DISABLED`:
+
 - (void)DISABLED_testThatItDoesURLEncoding
+
 It’s easy to search for this string, and since the method name no longer starts with test, XCTest will skip this method.
 
-Given / When / Then
+我们很容易就能找到这个方法，并且因为这个方法不再是以test为开头了，所有XCTest在运行时也会跳过这个测试。
+
+##Given / When / Then
+##Given / When / Then
+
 We structure our tests by using the Given-When-Then pattern—every test is split into three parts.
+我们可以根据Given-When-Then模式来组织我们的测试用例，将测试用例拆分成三个部分。
 
 The given section sets up the environment for the test by creating model objects or bringing the system under test to a certain state. The when section contains the code we want to test. In most cases, this is only one method call. In the then section, we check the result of our action: Did we get the desired output? Was the object changed? This section consists mainly of assertions.
 
+`given`这部分是建立测试环境，我们可以通过创建模型对象或将被测试的系统设置到指定的状态。而`when`这部分包含了我们要测试的代码。在大部分情况，只有一个方法会被调用。在`then`这部分
+，我们需要检查我们行为的结果--是否得到了我们期望的结果？对象是否有改变？这部分会有很多断言。
+
 In a fairly simple test, it looks like this:
+就想下面这个简单的测试用例一样：
 
 - (void)testThatItDoesURLEncoding
 {
@@ -79,9 +116,14 @@ In a fairly simple test, it looks like this:
     // then
     XCTAssertEqualObjects(encodedURL, @"/search?q=%24%26%3F%40");
 }
+
 This simple pattern makes it easier to write and understand tests, as they all follow the same basic pattern. For faster visual scanning, we even put the words “given,” “when,” and “then” as comments on top of their respective sections. This way, the method being tested immediately sticks out.
 
-Reusable Code
+这种模式使我们能够更方便的写和理解这些测试用例额，因为他们都遵循了同样基础的模式。为了更快的视觉扫描，我们会在每个部分的代码上写“given”，“when”，“then”作为注释。通过这种方式，这个方法就能方法就能立即被测试出来。
+
+##Reusable Code
+##可重用代码
+
 Over time, we noticed that we repeated some code again and again in our tests, like waiting for an asynchronous operation to finish or setting up an in-memory Core Data stack. To avoid code duplication, we began to gather all these useful snippets into a common base class for all our tests.
 
 It turned out that this is not only useful as a collection of utility methods. The test base class can run its own -setUp and -tearDown methods to set up the environment. We use this mostly to initialize Core Data stacks for testing, to reseed our deterministic NSUUID (which is one of those small things that makes debugging a lot easier), and to set up background magic to simplify asynchronous testing.
