@@ -177,31 +177,31 @@ A lot has been said about stateless code during the last few years. But at the e
 无状态性的代码在过去几年中一直被提起。但是在今天结束的时候，我们的app还是需要状态。如果没有状态，大部分app就会变得没有意义。但是状态的管理又会引起很多bug，因为管理状态非常复杂。
 
 We made our code a lot easier to work on by isolating the state. A few classes contain state, while most are stateless. In addition to the code, testing got a whole lot easier, too.
-我们通过隔离这些状态来使我们的代码能更容易工作。一些类中包含状态，而大部分则是无状态的。除了代码，测试也变得更加简单。
+我们通过隔离这些状态来使我们的代码更容易工作。一些类中包含状态，而大部分则是无状态的。通过这样的方式之后，不仅是代码，测试也变得更加简单。
 
 For example, we have a class, EventSync, that is responsible for sending local changes to our server. It needs to keep track of which local objects have changes that need to get pushed to the server, and which changes are currently being pushed. We can send multiple changes at once, but we don’t want to send the same change twice.
-比如说，我们有一个叫`EventSync`的类，它是负责发送本地变化到我们的服务器。它需要跟踪哪些本地对象有过改变需要上传到服务器中，哪些改变现在正在被上传到服务器。我们需要一次发送多个变化，但是我们不想发送重复的变化。
+比如说，我们有一个叫`EventSync`的类，它是负责把本地变化发送到服务器。所以它需要跟踪哪些本地对象发生变化需要上传到服务器，还有哪些本地改变现在正在被上传到服务器。我们一次需要发送多个变化，但是我们不想发送重复的变化。
 
 We also had interdependencies between objects to keep track of. If A has a relationship to B, and B has local changes, we need to wait for those local changes to be pushed first, before we can send the changes of A.
-我们也有跟踪对象之间的依赖关系。当**A**和**B**有依赖关系，我们需要在发送**A**的变化前先发送**B**的本地变化。
+我们也有跟踪对象之间的依赖关系。当**A**和**B**有依赖关系，我们需要在发送**A**的本地变化前先发送**B**的本地变化。
 
 We have a UserSyncStrategy that has a -nextRequest method that generates the next request. This request will send local changes to the server. The class itself is stateless, though. Or rather: All its state is encapsulated inside an UpstreamObjectSync class, which keeps track of all the user objects that have local changes, and for which we have running requests. There is no state outside this class.
-我们有一个`UserSyncStrategy`类，它有个一个`-nextRequest`方法可以生成下一次请求。这个请求将会发送本地改变到服务器中。虽然，这个类本身是无状态的。更精确地说，所有它的状态都被封装在一个叫`UpstreamObjcetSync`的类中，它负责跟踪那些有本地改变的用户对象，还有那些我们正在运行的请求。除了这个类之外都是没有状态的。
+我们有一个`UserSyncStrategy`类，它有一个`-nextRequest`方法可以生成下一次请求。这个请求会发送本地改变到服务器中。虽然这个类本身是无状态的。更精确地说，所有它的状态都被封装在一个叫`UpstreamObjcetSync`的类中，它负责跟踪那些有本地改变的用户对象，还有那些我们正在运行的请求。除了这个类之外都是没有状态的。
 
 This way, it was easy for us to have one set of tests for the UpstreamObjectSync. They check that this class manages the state correctly. For the UserSyncStrategy, we were mocking the UpstreamObjectSync and didn’t have to worry about any state inside the UserSyncStrategy itself. That reduced the test complexity a lot, even more so because we were syncing many different kind of objects, and our different classes were all stateless and able to re-use the UpstreamObjectSync class.
-通过这个方式，我们可以很容易得到测试`UpstremObjectSync`的集合。他们检查这个类正确地管理状态。对于`UserSyncStrategy`，当我们正在`mockUpstremObjectSync`的时候，不用担心在`UserSyncStrategy`本身的一些状态。这也减少了测试的复杂度，更如此因为我们正在同步很多不同的对象，并且我们不同的类都是无状态的，还可以重用`UpstreamObjectSync`类。
+通过这个方式，我们可以很容易得到测试`UpstremObjectSync`的集合。他们检查这个类是否正确地管理状态。对于`UserSyncStrategy`来说，当我们正在mock`mockUpstremObjectSync`的时候，不用担心在`UserSyncStrategy`本身的一些状态。这也减少了测试的复杂度，因为我们正在同步很多不同的对象，我们的不同的类都是无状态的，我们还可以重用`UpstreamObjectSync`类。
 
 ##Core Data
 ##Core Data
 
 Our code relies heavily on Core Data. Since we need our tests to be isolated from one another, we have to bring up a clean Core Data stack for each test case, and tear it down afterward. We need to be sure that we don’t reuse the store from one test case for the next test.
-我们的代码有点过于依赖于[Core Data](https://developer.apple.com/technologies/mac/data-management.html)。因为我们需要我们的测试是相互隔离的，这样我们就必须为每个测试用例创建一个**clean**的Core Data堆栈，然后再销毁它。我们需要确保我们在这个测试用例到下个测试用例中没有重复使用一个存储。
+我们的代码有点过于依赖于[Core Data](https://developer.apple.com/technologies/mac/data-management.html)。因为我们需要我们的测试是相互隔离的，这样我们就必须为每个测试用例创建一个**干净的**Core Data堆栈，然后再销毁它。我们需要确保在这个测试用例到下个测试用例的过程中没有重复使用一个内存空间。
 
 All of our code is centered around two managed object contexts: one that the user-interface uses and that is tied to the main queue, and one that we use for synchronization and that has its own private queue.
 我们的所有代码都是以两个managed object context为中心：一个是用户界面时要使用的，它需要放在主队列上，而另一个是我们同步时要使用的，它被放在自己的私有队列上。
 
 We didn’t want to repeat creating managed object contexts inside every test that needs them. Hence, inside our shared TestCase superclass’ -setUp method, we create this set of two managed object contexts. This makes each individual test a lot easier to read.
-我们不想在我们需要managed object context的时候，都要重复创建它们。所以我们在共享的`TestCase`父类的`-setUp`方法中加入了创建两个managed object context的集合。这使每个独立的测试用例更易读。
+我们不想在每次需要managed object context的时候，都要重复创建它们。所以我们在共享的`TestCase`父类的`-setUp`方法中加入了创建两个managed object context的方法。这使每个独立的测试用例更易读。 
 
 A test that needs a managed object context can simply call self.managedObjectContext or self.syncManagedObjectContext, like so:
 一个测试用例需要managed object context时可以见很方便地调用`self.managedObjectContext`或者 `self.syncManagedObjectContext`，就像这样：
@@ -231,21 +231,21 @@ We are using NSMainQueueConcurrencyType and NSPrivateQueueConcurrencyType to mak
 ##合并多个Context
 
 We have two contexts in our code. In production, we rely heavily on being able to merge from one context to another by means of -mergeChangesFromContextDidSaveNotification:. At the same time, we are using a separate persistent store coordinator for each context. Both contexts can then access the same SQLite store with minimal contention.
-在我们的代码中有两个context。在生产中，我们依赖于能够通过`-mergeChangesFromContextDidSaveNotification:`来将一个context合并到另一个context。同时，每个context使用一个单独的persistent store coordinator。两个context能以最小的资源冲突来访问SQLite。
+在我们的代码中有两个context。在开发过程中，我们非常依赖于通过`-mergeChangesFromContextDidSaveNotification:`方法将一个context合并到另一个context。同时，每个context使用一个单独的persistent store coordinator。这样两个context能以最小的资源冲突来访问同一个SQLite。
 
 But for testing, we had to change this. We want to be able to use an in-memory store.
-但是对于测试来说，我们必须改变这一点，我们只想要使用一个内存存储器。
+但是对于测试来说，我们必须改变这一点，我们只想使用一个内存空间。
 
 Using an on-disk SQLite store for testing does not work, because there are race conditions associated with deleting the store on disk. This would break isolation between tests. In-memory stores are a lot faster, which is good for testing.
-使用磁盘上的SQLite存储器对于测试来说并不管用，因为这里有与从磁盘中删除存储的竞态条件相关。它会打破测试用例之间相互隔离的局面。内存存储器更加快速，这有利于测试。
+使用磁盘上的SQLite空间对于测试来说并不管用，因为这里有与从磁盘中删除空间的竞态条件相关。它会打破测试用例之间相互隔离的局面。使用内存空间能更加快速，这有利于测试。
 
 We use factory methods to create all our NSManagedObjectContext instances. The base test class alters the behavior of these factory methods slightly, so that all contexts share the same NSPersistentStoreCoordinator. At the end of each test, we discard that shared persistent store coordinator to make sure that the next test uses a new one, and a new store.
-我们使用工厂方法来创建我们的`NSManagedObjectContext`实例。基础测试类略微地改变了工厂方法的行为么，来实现所有的context能够公用同样的NSPersistentStoreCoordinator。在每个测试的结束时，我们都要抛弃公用的persistent store coordinator来确保下个测试用例能够新的和新的存储器。
+我们使用工厂方法来创建我们的`NSManagedObjectContext`实例。基础测试类略微地改变了工厂方法的行为，来实现所有的context能够公用同样的NSPersistentStoreCoordinator。在每个测试的结束时，我们都要抛弃公用的persistent store coordinator来确保下个测试用例能够新的NSPersistentStoreCoordinator和新的内存空间。
 
 ##Testing Asynchronous Code
 ##测试异步代码
 Asynchronous code can be tricky. Most testing frameworks offer some basic helpers for asynchronous code.
-异步代码是非常狡猾。大多数测试框架都有提供一些对于异步代码的基础辅助工具。
+异步代码非常狡猾。大多数测试框架都有提供一些测试异步代码的基础辅助方法。
 
 Let’s say we have an asynchronous message on NSString:
 假设我们有一个关于NSString的异步消息：
@@ -266,28 +266,28 @@ With XCTest, we could test it like this:
     [self waitForExpectationsWithTimeout:0.1 handler::nil];
 }
 Most testing frameworks have something like this.
-大部分的测试框架都是这样。
+大部分的测试框架都是这样做。
 
 But the main problem with asynchronous testing is isolation. Isolation is the “I“ in FIRST, as mentioned by the article about testing practices.
-但是异步代码的测试的主要问题是隔离。隔离在英语中是Isolation，也就是以“I”为先，这在[这篇关于测试练习的文章](http://www.objc.io/issue-15/bad-testing-practices.html)中被提到过。
+但是异步代码的测试的主要问题是隔离。隔离在英语中是Isolation，也就是以“I”为先，这在[这篇关于测试实战的文章](http://www.objc.io/issue-15/bad-testing-practices.html)中被提到过。
 
 With asynchronous code, it can be very tricky to ensure that code from one test has completely stopped running on all threads and queues before the next test starts.
-由于测试异步代码很难确定在下一个测试开始之前已经在所有的线程或队列中都已经运行结束了。
+测试异步代码的时候，我们很难确定在下一个测试开始之前，被测试的代码在所有的线程或队列中都已经运行结束。
 
 We found that the best solution to this problem is to consistently use groups, namely dispatch_group_t.
-我发现对于这样的问题的最好解决方法就是一贯地使用组，也就是`dispatch_group_t`。
+我发现对于这样的问题的最好解决方法就是一致地使用组，也就是`dispatch_group_t`。
 
 ##Don’t Be Alone, Join a Group
-##不要孤单，加入一个组
+##不要单独作战，加入一个团队
 
 Some of our classes need to use a dispatch_queue_t internally. Some of our classes enqueue blocks onto an NSManagedObjectContext’s private queue.
-我们的一些类中需要在内部使用`dispatch_queue_t`，一些则在`NSManagedObjectContext`的私有队列中排队block。
+我们的一些类中需要在内部使用`dispatch_queue_t`，一些则在`NSManagedObjectContext`的私有队列中使用block队列。
 
 Inside our -tearDown method, we need to wait for all such asynchronous work to be completed. To achieve that, we had to do multiple things, as shown below.
 在我们的`-tearDown`方法中，我们需要等所有的异步工作结束。为了实现这样的方式，我们必须做很多事情，就像下面提到的。
 
 Our test classes have a property:
-我们的测试类中有一个property：
+我们的测试类中有一个这样的property：
 
 @property (nonatomic) dispatch_group_t;
 
@@ -310,7 +310,7 @@ Since we’re relying heavily on Core Data, we added a method to NSManagedObject
 }
 
 and added a new dispatchGroup property to all managed object contexts. We then exclusively used -performGroupedBlock: is all our code.
-并且为所有managed object contexts添加一个新的property名为dispatchGroup。然后我们在所有的代码中仅仅使用`-performGroupedBlock:`就可以了。
+并且为所有managed object contexts添加一个新的名为dispatchGroup的property。然后我们在所有的代码中仅仅使用`-performGroupedBlock:`就可以了。
 
 With this, we could wait for all asynchronous work to be done inside our tearDown method:
 通过这样的方式，我们可以在我们`tearDown`方法中实现等待所有异步工作结束。
@@ -336,14 +336,14 @@ With this, we could wait for all asynchronous work to be done inside our tearDow
     }
 }
 This works, because -tearDown gets called on the main loop. We spun the main loop to make sure that any code that might get enqueued onto the main queue got to run. The above code will hang indefinitely if the group never empties. In our case, we adapted it slightly, so that we had a timeout.
-这样是有用的，因为`-tearDown`是在main loop中被调用的。我们在main loop调用它就可以确保一些代码会进入主队列中等待运行。如果这个组永远不空的话，上面这个代码可能会被挂起，在我们情况里，我们稍微调整了一下代码，以确保它有个超时机制。
+这样是有用的，因为`-tearDown`是在main loop中被调用的。我们在main loop调用它就可以确保一些代码会进入主队列中等待运行。如果这个组永远不空的话，上面这个代码可能会被挂起，在我们这个情况下，需要稍微调整了一下代码，以确保它有个超时机制。
 
 ### Waiting for All Work to Be Done
 ### 等待所有任务结束
 
 With this in place, a lot of our other tests became a lot easier, too. We created a `WaitForAllGroupsToBeEmpty()` helper, which we use like this:
 
-这个要求具备后，我们很多其他的测试用例也会变得简单一些。我们创建了一个`WaitForAllGroupsToBeEmpty()`辅助方法，我们可以如下使用它：
+实现这个方法之后，我们很多其他的测试用例也变得简单很多。我们创建一个`WaitForAllGroupsToBeEmpty()`辅助方法，我们可以像这样使用它：
 
     - (void)testThatItDoesNotAskForNextRequestIfThereAreNoChangesWithinASave
     {
