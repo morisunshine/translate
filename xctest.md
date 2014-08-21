@@ -343,7 +343,7 @@ This works, because -tearDown gets called on the main loop. We spun the main loo
 
 With this in place, a lot of our other tests became a lot easier, too. We created a `WaitForAllGroupsToBeEmpty()` helper, which we use like this:
 
-实现这个方法之后，我们很多其他的测试用例也变得简单很多。我们创建一个`WaitForAllGroupsToBeEmpty()`辅助方法，我们可以像这样使用它：
+实现这个方法之后，我们很多其他的测试用例也变得简单很多。在这里，我们创建了一个`WaitForAllGroupsToBeEmpty()`辅助方法，可以像这样使用它：
 
     - (void)testThatItDoesNotAskForNextRequestIfThereAreNoChangesWithinASave
     {
@@ -360,10 +360,10 @@ With this in place, a lot of our other tests became a lot easier, too. We create
 
 The last line waits for all asynchronous work to be done, i.e. the test makes sure that even asynchronous blocks enqueuing additional asynchronous work are all done, and that none of them trigger any of the rejected methods.
 
-最后一行代码是等待所有的异步任务都执行完，比如，这个测试用例保证，即使是在异步 blocks 中又入队的其他的异步任务也都被执行完毕了，并且所有的都不会再触发 rejected 相关的方法调用。
+最后一行代码是等待所有的异步任务都执行完，比如，这个测试用例确保在这个异步blocks队列 中，那些后面入队的其他异步任务也都被执行完毕，并且都没有触发rejected相关的方法。
 
 We implemented this with a simple macro
-我们通过一个简单的宏来实现这种需求
+我们用一个简单的宏来实现它
 
     #define WaitForAllGroupsToBeEmpty(timeout) \
         do { \
@@ -373,7 +373,7 @@ We implemented this with a simple macro
         } while (0)
 
 which, in turn, uses a method on our shared test case superclass:
-在其中，又使用了一个我们共享在父类中的方法：
+在这里，依次调用测试公共父类中的一个方法：
 
     - (BOOL)waitForGroupToBeEmptyWithTimeout:(NSTimeInterval)timeout;
     {
@@ -415,15 +415,14 @@ are some basic building blocks for asynchronous tests.
 
         [self waitForExpectationsWithTimeout:0.1 handler::nil];
 
-是异步测试的一些基本的构建代码块 (building blocks)。
-
+是异步测试中的一些基本构建块。
 
 XCTest has some convenience stuff for `NSNotification` and key-value observing, both of which are built on top of these building blocks.
-对于`NSNotification`和 key-value observing，XCTest 提供了一些便利的方式，这些都是建立在这些构建代码块的基础上的。
+XCTest在对于使用`NSNotification`和 KVO上的情况提供了一些便利的方式，这些方式都是建立在这些构建块的基础上的。
 
 Sometimes, though, we found ourselves using the same patters in multiple places, e.g. if we're asynchronously expecting a managed object context to be saved, we may have code like this:
 
-但是很多时候，我们发现自己会在很多地方使用相同格局的代码，比如，如果我们异步expecting一个受管对象上下文(a managed object context)被保存，我们可能会写出如下代码：
+但是很多时候，我们发现自己会在很多地方使用相同模式的代码，比如，如果我们用异步地方式指望NSManagedObjectContext被保存，我们可能会写出如下代码：
 
     // expect
     [self expectationForNotification:NSManagedObjectContextDidSaveNotification
@@ -431,7 +430,7 @@ Sometimes, though, we found ourselves using the same patters in multiple places,
                              handler:nil];
 
 We simplify this code by having a single, shared method
-我们可以独立出一个共享的方法来简化这个代码
+我们可以抽象出一个公共的方法来简化这个代码
 
     - (XCTestExpectation *)expectationForSaveOfContext:(NSManagedObjectContext *)moc;
     {
@@ -441,45 +440,45 @@ We simplify this code by having a single, shared method
     }
 
 and then use
-然后再在测试用例中使用如下方法调用
+然后再在测试用例中这样使用它：
 
     // expect
     [self expectationForSaveOfContext:self.syncManagedObjectContext];
 
 inside our tests. This is easier to read. Along this pattern it is possible to add custom methods for other situations, too.
-这更容易阅读。类似于这种模式，也可以给其他情况增加自定义的方法。
+这样更易读。根据这种模式，我们也可以给其他情况添加自定义的方法。
 
 
 
 <a name="fake-transport-session"> </a>
 
 ## The Ol’ Switcheroo—Faking the Transport Layer
-## IO 切换器—欺骗传输层
+## Ol的转变—伪装传输层
 
 One important question in testing an application is how to test the interaction with the server. The most ideal solution would be to quickly spin up a local copy of the real server, to provision it with fake data, and to run tests directly against it over http.
 
-在测试时，一个很重要的问题就是如何测试与服务器之间的交互。最理想的解决方案是快速的在真实服务器上取一块本地拷贝，给它填充上假数据，然后通过 http 直接针对它运行测试用例。
+在测试时，一个很重要的问题就是如何测试应用与服务端之间的交互。最理想的解决方案是快速的从真实服务器上取一块本地副本，给它填充上假数据，然后通过 http 对它直接运行测试用例。
 
 We are, in fact, working on this solution. It gives us a very realistic test setup. But the sad reality is that it is also a very slow setup. Clearing the database of the server between each tests is slow. We have 1,000 tests. Even if only 30 of them depend on having a real server, if clearing the database and bringing up a 'clean' server instance takes 5 seconds, that would be 2.5 minutes of our test spent on waiting for that to happen. And we also needed to be able to test a server API before that API had been implemented. We needed something else.
 
-实际上，我们就是使用的这种解决方案。它为我们提供了一个非常现实的测试配置。但是一个不好的现实影响是，这种方案是非常慢的。在每次测试之间清理服务器的数据库是非常慢的。我们有1000个测试用例。即使只有其中30个测试用例需要依赖真实的服务器，如果清理数据库，并且提供一个干净的服务器实例需要5秒钟的时间，那么我们的测试过程就需要有2.5分钟的时间是在等待清理工作的完成。我们也需要能够在服务器 API 真正实现之前对其进行测试。我们还需要其他一些东西。
+实际上，我们就是使用的这种解决方案。它为我们提供了一个非常真实的测试配置。但这有个不好的方面，就是这种方案运行速度非常慢。在每次测试之间，清理服务器数据库的速度非常慢。我们有1,000个测试用例，其中有30个测试用例需要依赖真实的服务器，如果我们要清理数据库，并且提供一个“干净”的服务器实例就需要5秒钟的时间，那么我们的测试过程中有2.5分钟的时间是在等待清理工作。我们也需要在服务器的API可用之前对它进行测试。我们就还需要做其他事情。
 
 This alternative solution is our 'fake server.' From the get-go, we structured our code so that all our communication with the server is channeled through a single class, the `TransportSession`, which is similar in style to `NSURLSession`, but also handles JSON conversion.
 
-替代的解决方案是‘虚假服务器’。从一开始，我们把所有和服务器交互的代码全部都组织在 `TransportSession`这个类中，这个类类似于`NSURLSession`，但是也处理 JSON 转换。
+替代的解决方案就是‘伪装服务器’。从一开始，我们把所有和服务器交互的代码全部都整合在 `TransportSession`这个类中，这个类风格上接近于`NSURLSession`，但是它也可以处理 JSON 转换。
 
 
 We have a set of tests that use the API we provide to the UI, and all the interaction with the server is then channeled through a *fake* implementation of the `TransportSession`. This transport session mimics both the behavior of the real `TransportSession` and the behavior of the server. The fake session implements the entire protocol of the `TransportSession` and adds a few methods that allow us to set up its state.
 
-我们有一些列的测试用例是使用我们提供给 UI 层的 API 的，并且所有的这些和服务器的交互都被引导到一个假的实现`TransportSession`中去。这个 transport session 即模仿一个真实的`TransportSession`的行为，也模仿服务器的行为。这个虚假的 session 实现了整个 `TransportSession`协议，并且也提供了一些允许我们改变其状态的方法。
+我们有一系列的测试用例是使用我们提供给 UI 层的 API ，并且所有的这些和服务器的交互都被整合到伪装的`TransportSession`实现中。这个传输会话即模仿一个真实的`TransportSession`行为，也模仿服务器的行为。这个伪装的会话实现了整个 `TransportSession`协议，并且也提供了一些允许我们改变其状态的方法。
 
 Having a custom class here has several advantages over mocking the server in each test using OCMock. For one, we can create more complex scenarios than what, realistically, would be possible with a mock. We can simulate edge cases that are hard to trigger with a real server.
 
-相比在每个测试用例中使用OCMock来模拟服务器，提供一个自定义的类有很多优势。我们可以创建比使用 mock 更复杂的场景。我们可以模拟一些在真实服务器上很难触发的边缘情况。
+相比在每个测试用例中使用OCMock来模拟服务器，使用一个自定义的类有很多优势。我们可以创建比使用 mock 更复杂的场景。我们可以模拟一些在真实服务器上很难触发的边缘情况。
 
 Also, the fake server has tests of its own, so its answers are more precisely defined. If we ever need to change the server's reaction to a request, we only have to do so in one place. This makes all the tests that depend on the fake server much more stable, and we can more easily find parts in our code that do not play well with the new behavior.
 
- 并且，这个假服务器也有对其自身的测试用例，所以它的结果是更精确定义的。如果我们想改变服务器的反应到一个请求上去，我们只需要在一个地方改动即可。这使我们所有依赖于假服务器的的测试用例更稳定，并且我们也能更容易的发现我们代码中和新的行为配合不好的地方。
+ 并且，这个伪装的服务器也有对其自身的测试用例，所以它的返回结果也是更精确。如果我们想改变服务器的反应到一个请求上去，我们只需要在一个地方改动即可。这使我们所有依赖于伪装服务器的的测试用例更稳定，这样也能更容易发现代码中和新的行为配合不好的地方。
 
 The implementation of our `FakeTransportSession` is simple. An `HTTPRequest` object encapsulates the relative URL, method, and optional payload of a request. The `FakeTransportSession` maps all endpoints to internal methods, which then generate responses. It even has its own in-memory Core Data stack to keep track of the objects it knows about. This way, a GET can return a resource that a previous operation added with a PUT.
 
@@ -488,16 +487,16 @@ The implementation of our `FakeTransportSession` is simple. An `HTTPRequest` obj
 
 All of this may sound like a hard-to-justify time investment. But the fake server is actually quite simple: it is not a real server; we cut a lot of corners. The fake server can only serve a single client, and we do not have to worry about performance / scalability. We also did not implement everything in one huge effort but wrote the parts we needed while developing and testing.
 
-所有的这些听起来需要很多的时间投入。但是，这个假服务器实际上是很简单的：它不是一个真正的服务器；我们削减了大量的细节。这个假服务器只能够为一个客户端提供服务，并且我们也不需要担心性能和扩展性。我们也不需要一次实现所有的功能，我们只需要实现在开发和测试中所需要的功能即可。
+所有的这些听起来需要很多的时间投入。但是，这个伪装的服务器实际上是很简单的：因为它不是一个真正的服务器；我们削减了大量的细节。这个伪装的服务器只能够为一个客户端提供服务，并且我们也不需要担心性能和扩展性。我们也不需要一次实现所有的功能，我们只需要实现在开发和测试中所需要的功能即可。
 
 One thing worked in our favor, though: the server API was already quite stable and well defined when we started.
-尽管这样，有一件事情对我们是有利的：在我们开始做这件事时，我们的服务器 API 已经非常稳定和很好的定义了。
+这里还有一件事情对我们很有利：在我们开始做这件事时，我们服务器的 API 已经非常稳定而且有良好的定义。
 
 ## Custom Assert Macros
 ## 自定义断言宏
 
 With the Xcode Test framework, one uses XCTAssert macros to do the actual checks:
-使用 Xcode Test 框架，人们使用XCTAssert宏来做实际的检查：
+使用 Xcode Test 框架，要使用XCTAssert宏来做实际的检查：
 
     XCTAssertNil(request1);
     XCTAssertNotNil(request2);
@@ -508,13 +507,13 @@ There's a full list of "Assertions Listed by Category" in Apple’s ["Writing Te
 在苹果的["编写测试类和方法"](https://developer.apple.com/library/prerelease/ios/documentation/DeveloperTools/Conceptual/testing_with_xcode/testing_3_writing_test_classes/testing_3_writing_test_classes.html)这篇文章里，有一个全面的按照类别排列的断言列表。
 
 But we found ourselves often using very domain-specific checks, such as:
-但是我们发现自己经常使用具体的检查，比如：
+但是我们发现自己经常使用一些比较特定情况的检查，比如：
 
     XCTAssertTrue([string isKindOfClass:[NSString class]] && ([[NSUUID alloc] initWithUUIDString:string] != nil),
                   @"'%@' is not a valid UUID string", string);
 
 That's very verbose and hard to read. And we didn't like the code duplication. We fixed that by writing our own simple assert macro:
-这么写非常的啰嗦，难以阅读。并且我们也不喜欢代码重复。我们通过编写自己的断言宏来解决这个问题：
+这么写非常的啰嗦，难以阅读。并且我们也不喜欢重复代码。我们通过编写自己的断言宏来解决这个问题：
 
 
     #define AssertIsValidUUIDString(a1) \
@@ -531,7 +530,7 @@ Inside our tests, we then simply use:
     AssertIsValidUUIDString(string);
 
 This approach can make a huge difference in making the tests readable.
-这种方式让代码更具有可读性。
+这种方式也让代码更具有可读性。
 
 ### One Step Further
 ###更进一步
@@ -542,7 +541,7 @@ But we all know it: [C preprocessor macros](https://en.wikipedia.org/wiki/C_prep
 
 For some things, they're unavoidable, and it's all about limiting the pain. We need to use macros in this case in order for the test framework to know on which line and in which file the assertion failed. `XCTFail()` is itself a macro and relies on  `__FILE__` and `__LINE__` to be set.
 
-对于一些事情，它们是无法避免的，只能是如何减少这种痛苦。我们需要在使测试框架知道这个断言是在那个文件的那行代码失败的。`XCTFail()` 本事就是一个宏，而且它还依赖于 `__FILE__` and `__LINE__`。
+对于一些事情，它们是无法避免的，我们呢只能是做到如何减轻这种痛苦。我们需要让测试框架知道这个断言是在哪个文件的哪行代码失败的。`XCTFail()` 本事就是一个宏，而且它还依赖于 `__FILE__` and `__LINE__`。
 
 For more complex asserts and checks, we implemented a simple helper class called `FailureRecorder`:
 对于更复杂的断言和检查，我们实现了一个简单的辅助类 `FailureRecorder`：
@@ -565,17 +564,17 @@ For more complex asserts and checks, we implemented a simple helper class called
 
 
 In our code, we had quite a few places where we wanted to check that two dictionaries are equal to one another. `XCTAssertEqualObjects()` can do that, but when it fails, the output is not very useful.
-在我们的代码中，我们有一些地方我们想检查两个字典是不是相等：`XCTAssertEqualObjects()`可以做这样的事情，但是当不相等时，它的输出却不是那么的有意义。
+在我们的代码中，我们有一些地方我们想检查两个字典是不是相等：使用`XCTAssertEqualObjects()`可以做到，但是当不相等时，它的输出却不是那么的有意义。
 
 We wanted something like this
-我们希望像下面这样使用
+我们想这样使用它
 
     NSDictionary *payload = @{@"a": @2, @"b": @2};
     NSDictionary *expected = @{@"a": @2, @"b": @5};
     AssertEqualDictionaries(payload, expected);
 
 to output
-检查失败时，像下面这样输出
+检查到不相等时，就输出下面的结果
 
     Value for 'b' in 'payload' does not match 'expected'. 2 == 5
 
@@ -588,7 +587,7 @@ So we created
         } while (0)
 
 which forwards into our method
-这个宏中调用了如下的方法
+这个宏中调用了下面的方法
 
     - (void)assertDictionary:(NSDictionary *)d1 isEqualToDictionary:(NSDictionary *)d2 name1:(char const *)name1 name2:(char const *)name2 failureRecorder:(FailureRecorder *)failureRecorder;
     {
@@ -642,7 +641,7 @@ XCTest 最好的优点就是它可以和[Xcode IDE](https://developer.apple.com/
 ###专注
 
 While working on a single test or a set of tests inside a test class, the little diamond on the left-hand side gutter, next to the line numbers, lets us run that specific test or set of tests:
-当运行一个单一的测试用例或者在一个测试类中运行一些列测试用例是，在左手边栏上、靠近行数的小菱形，使我们可以运行特定的一个或者一系列测试用例：
+当运行一个单一的测试用例或者在一个测试类中运行一些列测试用例时，在左边栏上、靠近行数的小菱形，使我们可以运行特定的一个或者一系列测试用例：
 
 ![Diamond in Xcode Gutter]({{ site.images_path }}/issue-15/xctest-diamond-in-gutter@2x.png)
 ![Diamond in Xcode Gutter](http://img.objccn.io/issue-15/xctest-diamond-in-gutter@2x.png)
@@ -711,7 +710,7 @@ XCTest 的优势和确定都是由于它太简单了。你只需要创建一个�
 
 Unfortunately, that is also pretty much all you get. We did not hit any roadblocks while developing and testing our app with XCTest, but often, a bit more comfort would have been nice. XCTest classes look like plain classes, while the structure of a BDD test suite, with its nested contexts, is very visible. And this possibility to create nested contexts for tests is missing most. Nested contexts allow us to create more and more specific scenarios while keeping the individual tests very simple. This is, of course, possible in XCTest too, for example by calling custom setup methods for some of the tests. It is just not as convenient.
 
-不幸的是，这也几乎是所有你能得到的。在开发和测试中，在使用 XCTest 时我们没有碰到任何的障碍，但是很多时候如果能更方便一些会是更好的。XCTest 类看起来就像普通的类，而一个 BDD 测试套件的结构和其嵌套的上下文是很显而易见的。并且这种为测试创建嵌套上下文的可能性也是最缺失的。嵌套的上下文允许我们创建越来越具体的场景，并且使独立的测试相对简单。当然，在 XCTest 中这也是可以的，比如为一些测试用例调用自定义的 setup 方法。只是不那么的方便。
+不幸的是，这已经是全部优点了。在开发和测试中，使用 XCTest 时我们没有碰到任何的障碍，但是很多时候如果它能更方便一些会是更好的。XCTest 类看起来就像普通的类，而一个 BDD 测试套件的结构和其嵌套的上下文是很显而易见的。并且这种为测试创建嵌套上下文的可能性也是最缺失的。嵌套的上下文允许我们创建越来越具体的场景，并且使独立的测试相对简单。当然，在 XCTest 中这也是可以的，比如为一些测试用例调用自定义的 setup 方法。只是不那么的方便。
 
 How important the additional features of BDD frameworks are depends on the size of the project. Our conclusion is that XCTest can certainly be a good choice for small- to medium-sized projects. But for larger projects, it might pay off to take a closer look at BDD frameworks like [Kiwi](https://github.com/kiwi-bdd/Kiwi) or [Specta](https://github.com/specta/specta).
 
@@ -724,4 +723,4 @@ How important the additional features of BDD frameworks are depends on the size 
 
 Is XCTest the right choice? You will have to judge based on the project at hand. We chose XCTest as part of [KISS](https://en.wikipedia.org/wiki/Keep_it_simple_stupid)—and have a wish list for things we'd like to be different. XCTest has served us well, even though we had to make tradeoffs. With another testing framework, the tradeoff would have been something else.
 
-XCTest 是不是正确的选择呢？你必须根据手头的项目判断。我们选择使用 XCTest 作为[KISS](https://en.wikipedia.org/wiki/Keep_it_simple_stupid)的一部分，对于我们希望能有所改进的地方我们有一个愿望清单。尽管我们不得不做一些取舍，但是 XCTest 对我们来说工作的很好。对于其他的测试框架，这些取舍将会是另外一些事情。
+XCTest 是不是正确的选择呢？你必须根据手头的项目来做判断。我们选择使用 XCTest 作为[KISS](https://en.wikipedia.org/wiki/Keep_it_simple_stupid)的一部分，对于我们希望能有所改进的地方我们有一个愿望清单。尽管我们不得不做一些取舍，但是 XCTest 对我们来说工作的很好。对于其他的测试框架，这些取舍将会是另外一些事情。
